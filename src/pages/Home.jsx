@@ -6,6 +6,8 @@ import CategoryFilter from '../components/CategoryFilter.jsx';
 import RestaurantList from '../components/RestaurantList.jsx';
 import FeaturedRestaurant from '../components/FeaturedRestaurant.jsx';
 import Footer from '../components/Footer.jsx';
+import SearchBar from '../components/SearchBar.jsx';
+import '../styles/Home.css';
 
 import restaurants from '../data/restaurants.js';
 
@@ -41,10 +43,7 @@ export default function Home() {
 
             <main>
 
-                <Hero
-                    search={search}
-                    setSearch={setSearch}
-                />
+                <Hero />
 
                 <section className="discover-section">
 
@@ -65,6 +64,11 @@ export default function Home() {
                         </p>
 
                     </div>
+
+                    <SearchBar
+                        search={search}
+                        setSearch={setSearch}
+                    />
 
                     <CategoryFilter
                         categories={categories}

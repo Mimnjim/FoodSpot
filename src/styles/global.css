@@ -1,13 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&display=swap');
 
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
 :root {
     --background: #F7F3ED;
     --text: #171717;
@@ -15,6 +7,18 @@
     --accent: #D85C3A;
     --white: #FFFFFF;
     --border: #E5DED4;
+    --light-accent: #F1E2D9;
+    --content-width: 1200px;
+    --page-gutter: clamp(1.2rem, 5vw, 5rem);
+    --section-space: clamp(4rem, 8vw, 7rem);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
@@ -25,6 +29,21 @@ body {
     font-family: 'Manrope', sans-serif;
     background-color: var(--background);
     color: var(--text);
+    line-height: 1.5;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+button,
+input {
+    font-family: inherit;
+}
+
+button {
+    border: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -32,7 +51,21 @@ a {
     text-decoration: none;
 }
 
-button,
-input {
-    font-family: inherit;
+img {
+    display: block;
+    width: 100%;
+}
+
+main {
+    overflow: hidden;
+}
+
+::selection {
+    background-color: var(--accent);
+    color: var(--white);
+}
+
+:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
 }

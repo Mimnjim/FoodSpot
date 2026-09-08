@@ -1,4 +1,5 @@
 import React from 'react';
+import '../styles/RestaurantCard.css';
 
 export default function RestaurantCard({ restaurant }) {
     return (

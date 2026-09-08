@@ -1,6 +1,7 @@
 .header {
     width: 100%;
-    padding: 1.5rem 5rem;
+    min-height: 84px;
+    padding: 1.25rem var(--page-gutter);
 
     display: flex;
     align-items: center;
@@ -25,27 +26,47 @@
 }
 
 .header-nav a {
-    font-size: 0.9rem;
+    position: relative;
+
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--secondary);
 
     transition: color 0.2s ease;
 }
 
+.header-nav a::after {
+    content: '';
+
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+
+    width: 0;
+    height: 1px;
+
+    background-color: var(--text);
+
+    transition: width 0.2s ease;
+}
+
 .header-nav a:hover {
     color: var(--text);
+}
+
+.header-nav a:hover::after {
+    width: 100%;
 }
 
 .header-button {
     padding: 0.7rem 1.2rem;
 
-    border: none;
     border-radius: 999px;
 
     background-color: var(--text);
     color: var(--white);
 
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
 
     cursor: pointer;
@@ -58,4 +79,28 @@
 .header-button:hover {
     background-color: var(--accent);
     transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+    .header {
+        min-height: 72px;
+        gap: 1rem;
+        padding-block: 1rem;
+    }
+
+    .header-logo {
+        font-size: 1.7rem;
+    }
+
+    .header-nav ul {
+        gap: 1rem;
+    }
+
+    .header-nav a {
+        font-size: 0.75rem;
+    }
+
+    .header-button {
+        display: none;
+    }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
-import SearchBar from './SearchBar.jsx';
+import '../styles/Hero.css';
 
-export default function Hero({ search, setSearch }) {
+export default function Hero() {
     return (
         <section className="hero">
 
@@ -18,11 +18,6 @@ export default function Hero({ search, setSearch }) {
                 <p>
                     Discover restaurants, hidden gems and places worth remembering.
                 </p>
-
-                <SearchBar
-                    search={search}
-                    setSearch={setSearch}
-                />
 
             </div>
 
