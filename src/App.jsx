@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import Home from './pages/Home.jsx';
 import RestaurantDetail from './pages/RestaurantDetail.jsx';
+import Favorites from './pages/Favorites.jsx';
 
 export default function App() {
     const [favorites, setFavorites] = useState(() => {
@@ -46,6 +47,16 @@ export default function App() {
                     path="/restaurant/:id"
                     element={<RestaurantDetail />}
                 />
+                <Route
+                    path="/favorites"
+                    element={
+                        <Favorites
+                            favorites={favorites}
+                            onToggleFavorite={toggleFavorite}
+                        />
+                    }
+                />
+
             </Routes>
         </BrowserRouter>
     );

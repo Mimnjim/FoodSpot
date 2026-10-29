@@ -1,0 +1,80 @@
+
+.favorites-main {
+    width: 100%;
+    max-width: 1400px;
+    min-height: 60vh;
+    margin: 0 auto;
+    padding: 5rem;
+}
+
+.favorites-heading {
+    margin-bottom: 3rem;
+}
+
+.favorites-eyebrow {
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+}
+
+.favorites-heading h1 {
+    margin-top: 0.8rem;
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 400;
+    line-height: 1;
+}
+
+.favorites-heading p {
+    margin-top: 1rem;
+    color: var(--secondary);
+}
+
+.favorites-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 3rem 0 5rem;
+}
+
+.favorites-empty-heart {
+    color: var(--accent);
+    font-size: 3rem;
+}
+
+.favorites-empty h2 {
+    margin-top: 1rem;
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+}
+
+.favorites-empty p {
+    max-width: 420px;
+    margin-top: 0.7rem;
+    color: var(--secondary);
+    line-height: 1.7;
+}
+
+.favorites-explore-button {
+    display: inline-flex;
+    margin-top: 1.5rem;
+    padding: 0.9rem 1.4rem;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--white);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.favorites-explore-button:hover {
+    background: var(--accent);
+}
+
+@media (max-width: 700px) {
+    .favorites-main {
+        padding: 3rem 1.2rem;
+    }
+}

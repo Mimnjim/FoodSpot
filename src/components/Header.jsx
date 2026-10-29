@@ -1,36 +1,38 @@
-import React from 'react';
+
+import { Link } from 'react-router';
 import '../styles/Header.css';
 
 export default function Header() {
     return (
         <header className="header">
-
-            <a href="/" className="header-logo">
+            <Link to="/" className="header-logo">
                 FoodSpot
-            </a>
+            </Link>
 
             <nav className="header-nav">
                 <ul>
                     <li>
-                        <a href="/">Explore</a>
+                        <Link to="/">Explore</Link>
                     </li>
 
                     <li>
-                        <a href="/">Favorites</a>
+                        <Link to="/favorites">Favorites</Link>
                     </li>
 
                     <li>
-                        <a href="/">About</a>
+                        <Link to="/">About</Link>
                     </li>
 
                     <li>
-                        <button className="header-button">
+                        <button
+                            type="button"
+                            className="header-button"
+                        >
                             + Add a restaurant
                         </button>
                     </li>
                 </ul>
             </nav>
-
         </header>
     );
 }
