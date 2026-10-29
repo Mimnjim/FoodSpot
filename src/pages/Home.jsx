@@ -11,7 +11,7 @@ import '../styles/Home.css';
 
 import restaurants from '../data/restaurants.js';
 
-export default function Home() {
+export default function Home({ favorites, onToggleFavorite }) {
 
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Toutes');
@@ -78,6 +78,8 @@ export default function Home() {
 
                     <RestaurantList
                         restaurants={filteredRestaurants}
+                        favorites={favorites}
+                        onToggleFavorite={onToggleFavorite}
                     />
 
                     {filteredRestaurants.length === 0 && (
