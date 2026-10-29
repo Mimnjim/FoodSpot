@@ -1,0 +1,257 @@
+
+/* =========================
+   PAGE LAYOUT
+========================= */
+
+.restaurant-detail-page {
+    min-height: 100vh;
+}
+
+.restaurant-detail {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 5rem 7rem;
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+
+.detail-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+
+    margin-bottom: 2rem;
+}
+
+.detail-navigation a {
+    color: var(--secondary);
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.detail-navigation a:hover {
+    color: var(--accent);
+}
+
+.detail-navigation span {
+    color: var(--secondary);
+    font-size: 0.75rem;
+}
+
+/* =========================
+   MAIN CONTENT
+========================= */
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 4rem;
+    align-items: start;
+}
+
+.detail-image {
+    min-height: 500px;
+    overflow: hidden;
+    background-color: var(--border);
+}
+
+.detail-image img {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    object-fit: cover;
+}
+
+/* =========================
+   RESTAURANT INFORMATION
+========================= */
+
+.detail-content {
+    padding: 2rem 0;
+}
+
+.detail-category {
+    display: inline-block;
+    margin-bottom: 1rem;
+
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.detail-content h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(3rem, 5vw, 5.5rem);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+}
+
+.detail-location {
+    margin-top: 1rem;
+    color: var(--secondary);
+    font-size: 1rem;
+}
+
+.detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.detail-meta span:first-child {
+    color: var(--accent);
+}
+
+.detail-divider {
+    height: 1px;
+    margin: 2rem 0;
+    background-color: var(--border);
+}
+
+/* =========================
+   DESCRIPTION AND ADDRESS
+========================= */
+
+.detail-information {
+    margin-bottom: 2rem;
+}
+
+.detail-information h2 {
+    margin-bottom: 0.7rem;
+
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    font-weight: 400;
+}
+
+.detail-information p {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+/* =========================
+   BACK BUTTON
+========================= */
+
+.detail-back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 1rem;
+    padding: 0.9rem 1.4rem;
+
+    border-radius: 999px;
+    background-color: var(--text);
+    color: var(--white);
+
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.detail-back-button:hover {
+    background-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+/* =========================
+   NOT FOUND
+========================= */
+
+.restaurant-not-found {
+    max-width: 800px;
+    min-height: 55vh;
+    margin: 0 auto;
+    padding: 6rem 2rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.restaurant-not-found > span {
+    margin-bottom: 1rem;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.restaurant-not-found h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 400;
+    line-height: 1;
+}
+
+.restaurant-not-found p {
+    margin-top: 1rem;
+    color: var(--secondary);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+    .restaurant-detail {
+        padding: 2rem 2rem 5rem;
+    }
+
+    .detail-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .detail-image,
+    .detail-image img {
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 700px) {
+    .restaurant-detail {
+        padding: 1.5rem 1.2rem 4rem;
+    }
+
+    .detail-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .detail-image,
+    .detail-image img {
+        min-height: 300px;
+        max-height: 450px;
+    }
+
+    .detail-content {
+        padding: 1.5rem 0;
+    }
+
+    .detail-content h1 {
+        font-size: clamp(3rem, 12vw, 4.5rem);
+    }
+
+    .detail-navigation {
+        align-items: flex-start;
+    }
+}
