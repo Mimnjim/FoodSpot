@@ -1,12 +1,43 @@
-
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import Header from '../components/Header.jsx';
 import RestaurantList from '../components/RestaurantList.jsx';
 import Footer from '../components/Footer.jsx';
-import restaurants from '../data/restaurants.js';
+
 import '../styles/Favorites.css';
 
 export default function Favorites({ favorites, onToggleFavorite }) {
+
+    const [restaurants, setRestaurants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+
+        async function fetchRestaurants() {
+            try {
+                const response = await fetch('/api/restaurants');
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des favoris.');
+                }
+
+                const data = await response.json();
+
+                setRestaurants(data);
+
+            } catch (error) {
+                setError(error.message);
+
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchRestaurants();
+
+    }, []);
+
     const favoriteRestaurants = restaurants.filter((restaurant) =>
         favorites.includes(restaurant.id)
     );
@@ -24,7 +55,11 @@ export default function Favorites({ favorites, onToggleFavorite }) {
                     </p>
                 </div>
 
-                {favoriteRestaurants.length > 0 ? (
+                {loading ? (
+                    <p>Loading favorites...</p>
+                ) : error ? (
+                    <p>{error}</p>
+                ) : favoriteRestaurants.length > 0 ? (
                     <RestaurantList
                         restaurants={favoriteRestaurants}
                         favorites={favorites}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 
 import Header from '../components/Header.jsx';
 import Hero from '../components/Hero.jsx';
@@ -9,9 +10,40 @@ import Footer from '../components/Footer.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import '../styles/Home.css';
 
-import restaurants from '../data/restaurants.js';
-
 export default function Home({ favorites, onToggleFavorite }) {
+
+    const [restaurants, setRestaurants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    
+    useEffect(() => {
+
+        async function fetchRestaurants() {
+            try {
+                const response = await fetch('/api/restaurants');
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des restaurants.');
+                }
+
+                const data = await response.json();
+
+                setRestaurants(data);
+
+            } catch (error) {
+                setError(error.message);
+
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchRestaurants();
+
+    }, []);
+
+
 
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Toutes');
@@ -76,23 +108,31 @@ export default function Home({ favorites, onToggleFavorite }) {
                         setSelectedCategory={setSelectedCategory}
                     />
 
-                    <RestaurantList
-                        restaurants={filteredRestaurants}
-                        favorites={favorites}
-                        onToggleFavorite={onToggleFavorite}
-                    />
+                    {loading ? (
+                        <p>Loading restaurants...</p>
+                    ) : error ? (
+                        <p>{error}</p>
+                    ) : (
+                        <>
+                            <RestaurantList
+                                restaurants={filteredRestaurants}
+                                favorites={favorites}
+                                onToggleFavorite={onToggleFavorite}
+                            />
 
-                    {filteredRestaurants.length === 0 && (
-                        <p>
-                            No restaurants found.
-                        </p>
+                            {filteredRestaurants.length === 0 && (
+                                <p>No restaurants found.</p>
+                            )}
+                        </>
                     )}
 
                 </section>
 
-                <FeaturedRestaurant
-                    restaurant={featuredRestaurant}
-                />
+                {!loading && !error && featuredRestaurant && (
+                    <FeaturedRestaurant
+                        restaurant={featuredRestaurant}
+                    />
+                )}
 
             </main>
 

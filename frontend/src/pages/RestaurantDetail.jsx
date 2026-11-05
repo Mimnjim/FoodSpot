@@ -1,16 +1,54 @@
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
-import restaurants from '../data/restaurants.js';
 
 import '../styles/RestaurantDetail.css';
 
 export default function RestaurantDetail() {
     const { id } = useParams();
 
-    const restaurant = restaurants.find(
-        (item) => item.id === Number(id)
-    );
+    const [restaurant, setRestaurant] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+
+        async function fetchRestaurant() {
+            try {
+                const response = await fetch('/api/restaurants');
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement du restaurant.');
+                }
+
+                const data = await response.json();
+
+                const foundRestaurant = data.find(
+                    (item) => item.id === Number(id)
+                );
+
+                setRestaurant(foundRestaurant || null);
+
+            } catch (error) {
+                setError(error.message);
+
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchRestaurant();
+
+    }, [id]);
+
+    if (loading) {
+        return <p>Loading restaurant...</p>;
+    }
+
+    if (error) {
+        return <p>{error}</p>;
+    }
 
     if (!restaurant) {
         return (
