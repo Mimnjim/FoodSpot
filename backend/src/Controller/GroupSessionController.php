@@ -51,6 +51,7 @@ final class GroupSessionController extends AbstractController
         if ($session === null) {
             return $this->json(['message' => 'Session introuvable.'], 404);
         }
+
         if (!is_string($data['nickname'] ?? null) || trim($data['nickname']) === '') {
             return $this->json(['message' => 'Le pseudonyme est requis.'], 400);
         }
@@ -59,6 +60,21 @@ final class GroupSessionController extends AbstractController
         }
         try {
             return $this->json($service->join($session, trim($data['nickname'])), 201);
+        } catch (\RuntimeException $exception) {
+            return $this->json(['message' => $exception->getMessage()], 400);
+        }
+    }
+
+    #[Route('/api/group-sessions/{code}/participants/{participantId}', name: 'api_group_session_leave', methods: ['DELETE'])]
+    public function leave(string $code, string $participantId, GroupSessionRepository $repository, GroupSessionService $service): JsonResponse
+    {
+        $session = $repository->findByCode($code);
+        if ($session === null) {
+            return $this->json(['message' => 'Session introuvable.'], 404);
+        }
+        try {
+            $service->leave($session, $participantId);
+            return $this->json(['message' => 'Vous avez quitté la session.']);
         } catch (\RuntimeException $exception) {
             return $this->json(['message' => $exception->getMessage()], 400);
         }

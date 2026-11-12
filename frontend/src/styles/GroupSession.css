@@ -39,6 +39,12 @@
     background: var(--background);
 }
 
+.group-form select {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    background: var(--background);
+}
+
 .group-form button,
 .group-panel > button,
 .recommendations button {

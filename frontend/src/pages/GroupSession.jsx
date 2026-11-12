@@ -21,6 +21,9 @@ export default function GroupSession() {
     const [city, setCity] = useState('');
     const [name, setName] = useState('');
     const [likedCuisines, setLikedCuisines] = useState('');
+    const [avoidedCuisines, setAvoidedCuisines] = useState('');
+    const [restrictions, setRestrictions] = useState('');
+    const [budget, setBudget] = useState('');
     const [recommendations, setRecommendations] = useState([]);
     const [participantId, setParticipantId] = useState(
         () => localStorage.getItem(`foodspot-participant-${code}`) || ''
@@ -96,10 +99,27 @@ export default function GroupSession() {
                     participantId,
                     preferences: {
                         likedCuisines: likedCuisines.split(',').map((item) => item.trim()).filter(Boolean),
+                        avoidedCuisines: avoidedCuisines.split(',').map((item) => item.trim()).filter(Boolean),
+                        restrictions: restrictions.split(',').map((item) => item.trim()).filter(Boolean),
+                        budget: budget || null,
                     },
                 }),
             });
             setMessage('Préférences enregistrées.');
+        } catch (requestError) {
+            setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+
+    }
+
+    async function leaveSession() {
+        setIsSubmitting(true);
+        try {
+            await request(`/api/group-sessions/${code}/participants/${participantId}`, { method: 'DELETE' });
+            localStorage.removeItem(`foodspot-participant-${code}`);
+            window.location.href = '/group';
         } catch (requestError) {
             setError(requestError.message);
         } finally {
@@ -179,7 +199,7 @@ export default function GroupSession() {
                     <section className="group-panel">
                         <span className="eyebrow">SESSION {session.code}</span>
                         <h1>{session.name}</h1>
-                        <p>{session.city} · {session.participants.length} participant(s)</p>
+                        <p>{session.city} · {session.participants.length} participant(s) · {Object.keys(session.preferences || {}).length} réponse(s)</p>
                         {session.status !== 'collecting' ? (
                             <p className="group-status">
                                 {session.status === 'expired'
@@ -196,8 +216,18 @@ export default function GroupSession() {
                             <>
                                 <form onSubmit={savePreferences} className="group-form">
                                     <input placeholder="Cuisines aimées, séparées par des virgules" value={likedCuisines} onChange={(event) => setLikedCuisines(event.target.value)} />
+                                    <input placeholder="Cuisines à éviter, séparées par des virgules" value={avoidedCuisines} onChange={(event) => setAvoidedCuisines(event.target.value)} />
+                                    <input placeholder="Restrictions, séparées par des virgules" value={restrictions} onChange={(event) => setRestrictions(event.target.value)} />
+                                    <select aria-label="Budget" value={budget} onChange={(event) => setBudget(event.target.value)}>
+                                        <option value="">Budget non renseigné</option>
+                                        <option value="1">€</option>
+                                        <option value="2">€€</option>
+                                        <option value="3">€€€</option>
+                                        <option value="4">€€€€</option>
+                                    </select>
                                     <button type="submit" disabled={isSubmitting}>Enregistrer mes préférences</button>
                                 </form>
+                                <button type="button" onClick={leaveSession} disabled={isSubmitting}>Quitter la session</button>
                                 <button type="button" onClick={loadRecommendations} disabled={isSubmitting}>Voir les recommandations</button>
                                 <div className="recommendations">
                                     {recommendations.map((restaurant) => (

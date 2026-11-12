@@ -55,9 +55,40 @@ final class GroupSessionService
         if (!in_array($participantId, $participantIds, true)) {
             throw new RuntimeException('Participant inconnu.');
         }
+        foreach (['likedCuisines', 'avoidedCuisines', 'restrictions'] as $field) {
+            if (isset($preferences[$field]) && !is_array($preferences[$field])) {
+                throw new RuntimeException("Le champ $field doit être une liste.");
+            }
+        }
+        if (isset($preferences['budget']) && !in_array($preferences['budget'], ['1', '2', '3', '4'], true)) {
+            throw new RuntimeException('Budget invalide.');
+        }
         $all = $session->getPreferences();
         $all[$participantId] = $preferences;
         $session->setPreferences($all);
+        $this->entityManager->flush();
+    }
+
+    public function leave(GroupSession $session, string $participantId): void
+    {
+        $this->assertActive($session);
+        $participants = array_values(array_filter(
+            $session->getParticipants(),
+            static fn (array $participant): bool => $participant['id'] !== $participantId,
+        ));
+        if (count($participants) === count($session->getParticipants())) {
+            throw new RuntimeException('Participant inconnu.');
+        }
+        if ($participants === []) {
+            $session->setStatus('expired');
+        }
+        $session->setParticipants($participants);
+        $preferences = $session->getPreferences();
+        unset($preferences[$participantId]);
+        $session->setPreferences($preferences);
+        $votes = $session->getVotes();
+        unset($votes[$participantId]);
+        $session->setVotes($votes);
         $this->entityManager->flush();
     }
 
@@ -81,6 +112,9 @@ final class GroupSessionService
                 } elseif (in_array($category, $liked, true)) {
                     $score += 3;
                     $reasons[] = 'Cuisine appréciée par un participant.';
+                }
+                if (($preference['budget'] ?? null) !== null && $restaurant['priceRange'] === null) {
+                    $reasons[] = 'Prix non renseigné par OpenStreetMap.';
                 }
             }
             $restaurant['score'] = $score;
