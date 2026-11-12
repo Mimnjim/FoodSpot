@@ -33,6 +33,8 @@ export default function Footer() {
                 © 2026 FoodSpot
             </p>
 
+            <p>© OpenStreetMap contributors</p>
+
         </footer>
     );
 }

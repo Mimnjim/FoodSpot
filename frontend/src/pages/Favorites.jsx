@@ -22,9 +22,8 @@ export default function Favorites({ favorites, onToggleFavorite }) {
                     throw new Error('Erreur lors du chargement des favoris.');
                 }
 
-                const data = await response.json();
-
-                setRestaurants(data);
+                const payload = await response.json();
+                setRestaurants(payload.restaurants ?? payload);
 
             } catch (error) {
                 setError(error.message);

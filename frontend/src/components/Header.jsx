@@ -18,6 +18,9 @@ export default function Header() {
                     <li>
                         <Link to="/favorites">Favorites</Link>
                     </li>
+                    <li>
+                        <Link to="/group">Group</Link>
+                    </li>
 
                     <li>
                         <Link to="/">About</Link>

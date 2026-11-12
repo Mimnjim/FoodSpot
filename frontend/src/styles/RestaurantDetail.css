@@ -66,6 +66,10 @@
     object-fit: cover;
 }
 
+.detail-image-placeholder {
+    min-height: 500px;
+}
+
 /* =========================
    RESTAURANT INFORMATION
 ========================= */

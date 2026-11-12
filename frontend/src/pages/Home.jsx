@@ -20,6 +20,7 @@ export default function Home({ favorites, onToggleFavorite }) {
     const [error, setError] = useState(null);
 
     const [search, setSearch] = useState('');
+    const [city, setCity] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Toutes');
     const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -47,8 +48,8 @@ export default function Home({ favorites, onToggleFavorite }) {
                     );
                 }
 
-                const data = await response.json();
-
+                const payload = await response.json();
+                const data = payload.restaurants ?? payload;
                 setRestaurants(data);
 
             } catch (error) {
@@ -86,6 +87,10 @@ export default function Home({ favorites, onToggleFavorite }) {
                     params.set('search', debouncedSearch.trim());
                 }
 
+                if (city.trim() !== '') {
+                    params.set('city', city.trim());
+                }
+
                 // Envoyer la requête à Symfony
                 const response = await fetch(
                     `/api/restaurants?${params.toString()}`,
@@ -98,8 +103,8 @@ export default function Home({ favorites, onToggleFavorite }) {
                     );
                 }
 
-                const data = await response.json();
-
+                const payload = await response.json();
+                const data = payload.restaurants ?? payload;
                 setFilteredRestaurants(data);
 
             } catch (error) {
@@ -123,7 +128,7 @@ export default function Home({ favorites, onToggleFavorite }) {
             controller.abort();
         };
 
-    }, [debouncedSearch, selectedCategory]);
+    }, [debouncedSearch, selectedCategory, city]);
 
     // Récupérer les catégories disponibles
     const categories = [
@@ -158,6 +163,8 @@ export default function Home({ favorites, onToggleFavorite }) {
                     <SearchBar
                         search={search}
                         setSearch={setSearch}
+                        city={city}
+                        setCity={setCity}
                     />
 
                     <CategoryFilter

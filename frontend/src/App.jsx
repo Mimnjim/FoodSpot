@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import Home from './pages/Home.jsx';
 import RestaurantDetail from './pages/RestaurantDetail.jsx';
 import Favorites from './pages/Favorites.jsx';
+import GroupSession from './pages/GroupSession.jsx';
 
 export default function App() {
     const [favorites, setFavorites] = useState(() => {
@@ -56,6 +57,8 @@ export default function App() {
                         />
                     }
                 />
+                <Route path="/group" element={<GroupSession />} />
+                <Route path="/group/:code" element={<GroupSession />} />
 
             </Routes>
         </BrowserRouter>

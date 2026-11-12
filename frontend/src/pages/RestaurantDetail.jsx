@@ -84,33 +84,34 @@ export default function RestaurantDetail() {
 
                 <div className="detail-layout">
                     <div className="detail-image">
-                        <img
-                            src={restaurant.image}
-                            alt={restaurant.name}
-                        />
+                        {restaurant.image ? (
+                            <img src={restaurant.image} alt={restaurant.name} />
+                        ) : (
+                            <span className="detail-image-placeholder">FoodSpot</span>
+                        )}
                     </div>
 
                     <section className="detail-content">
                         <span className="detail-category">
-                            {restaurant.category}
+                            {restaurant.category || 'Restaurant'}
                         </span>
 
                         <h1>{restaurant.name}</h1>
 
                         <p className="detail-location">
-                            {restaurant.city}
+                            {restaurant.city || 'Ville non renseignée'}
                         </p>
 
                         <div className="detail-meta">
-                            <span>★ {restaurant.rating}</span>
-                            <span>{restaurant.priceRange}</span>
+                            {restaurant.rating !== null && <span>★ {restaurant.rating}</span>}
+                            {restaurant.priceRange && <span>{restaurant.priceRange}</span>}
                         </div>
 
                         <div className="detail-divider" />
 
                         <div className="detail-information">
                             <h2>About this place</h2>
-                            <p>{restaurant.description}</p>
+                            <p>{restaurant.description || 'Description non renseignée.'}</p>
                         </div>
 
                         <div className="detail-information">

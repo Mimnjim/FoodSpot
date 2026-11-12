@@ -14,16 +14,17 @@ export default function RestaurantCard({
                 className="restaurant-card-link"
             >
                 <div className="restaurant-card-image">
-                    <img
-                        src={restaurant.image}
-                        alt={restaurant.name}
-                    />
+                    {restaurant.image ? (
+                        <img src={restaurant.image} alt={restaurant.name} />
+                    ) : (
+                        <span className="restaurant-card-placeholder">FoodSpot</span>
+                    )}
                 </div>
 
                 <div className="restaurant-card-content">
                     <div>
                         <span className="restaurant-category">
-                            {restaurant.category}
+                            {restaurant.category || 'Restaurant'}
                         </span>
 
                         <h3>{restaurant.name}</h3>
@@ -31,8 +32,8 @@ export default function RestaurantCard({
                     </div>
 
                     <div className="restaurant-card-meta">
-                        <span>★ {restaurant.rating}</span>
-                        <span>{restaurant.priceRange}</span>
+                        {restaurant.rating !== null && <span>★ {restaurant.rating}</span>}
+                        {restaurant.priceRange && <span>{restaurant.priceRange}</span>}
                     </div>
                 </div>
             </Link>
