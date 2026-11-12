@@ -48,6 +48,10 @@ export default function GroupSession() {
                 method: 'POST',
                 body: JSON.stringify({ name, city, nickname }),
             });
+            localStorage.setItem(
+                `foodspot-participant-${data.code}`,
+                data.participants[0].id
+            );
             window.location.href = `/group/${data.code}`;
         } catch (requestError) {
             setError(requestError.message);
@@ -108,18 +112,19 @@ export default function GroupSession() {
             setError(requestError.message);
         }
 
-        async function decide(event) {
-            const mode = event.currentTarget.dataset.mode;
-            try {
-                const data = await request(`/api/group-sessions/${code}/decision`, {
-                    method: 'POST',
-                    body: JSON.stringify({ mode }),
-                });
-                setResult(data.result);
-                setSession(await request(`/api/group-sessions/${code}`));
-            } catch (requestError) {
-                setError(requestError.message);
-            }
+    }
+
+    async function decide(event) {
+        const mode = event.currentTarget.dataset.mode;
+        try {
+            const data = await request(`/api/group-sessions/${code}/decision`, {
+                method: 'POST',
+                body: JSON.stringify({ mode }),
+            });
+            setResult(data.result);
+            setSession(await request(`/api/group-sessions/${code}`));
+        } catch (requestError) {
+            setError(requestError.message);
         }
     }
 

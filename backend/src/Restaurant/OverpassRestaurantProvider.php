@@ -78,7 +78,7 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
 
     private function escape(string $value): string
     {
-        return addcslashes($value, '\\"');
+        return addcslashes(preg_quote($value, '/'), '\\"');
     }
 
     /** @param list<string> $headers */

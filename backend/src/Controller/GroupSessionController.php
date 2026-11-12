@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\GroupSession;
 use App\Repository\GroupSessionRepository;
 use App\Service\GroupSessionService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,11 +31,12 @@ final class GroupSessionController extends AbstractController
     }
 
     #[Route('/api/group-sessions/{code}', name: 'api_group_session_show', methods: ['GET'])]
-    public function show(string $code, GroupSessionRepository $repository): JsonResponse
+    public function show(string $code, GroupSessionRepository $repository, EntityManagerInterface $entityManager): JsonResponse
     {
         $session = $repository->findByCode($code);
         if ($session !== null && $session->getStatus() === 'collecting' && $session->getExpiresAt() <= new \DateTimeImmutable()) {
             $session->setStatus('expired');
+            $entityManager->flush();
         }
         return $session === null
             ? $this->json(['message' => 'Session introuvable.'], 404)
