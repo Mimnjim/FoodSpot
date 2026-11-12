@@ -12,27 +12,22 @@ export default function Header() {
             <nav className="header-nav">
                 <ul>
                     <li>
-                        <Link to="/">Explore</Link>
+                        <Link to="/">Explorer</Link>
                     </li>
 
                     <li>
-                        <Link to="/favorites">Favorites</Link>
+                        <Link to="/favorites">Favoris</Link>
                     </li>
                     <li>
-                        <Link to="/group">Group</Link>
-                    </li>
-
-                    <li>
-                        <Link to="/">About</Link>
+                        <Link to="/group">À plusieurs</Link>
                     </li>
 
                     <li>
-                        <button
-                            type="button"
-                            className="header-button"
-                        >
-                            + Add a restaurant
-                        </button>
+                        <Link to="/about">À propos</Link>
+                    </li>
+
+                    <li>
+                        <Link to="/group" className="header-button">Créer une session</Link>
                     </li>
                 </ul>
             </nav>

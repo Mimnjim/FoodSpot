@@ -178,8 +178,8 @@ export default function GroupSession() {
             <main className="group-main">
                 {!code ? (
                     <section className="group-panel">
-                        <span className="eyebrow">DISCOVERY TOGETHER</span>
-                        <h1>Find a place everyone can enjoy.</h1>
+                        <span className="eyebrow">DÉCOUVERTE À PLUSIEURS</span>
+                        <h1>Trouvez un lieu qui convient à tout le monde.</h1>
                         <form onSubmit={createSession} className="group-form">
                             <input required placeholder="Nom de la session" value={name} onChange={(event) => setName(event.target.value)} />
                             <input required placeholder="Ville" value={city} onChange={(event) => setCity(event.target.value)} />

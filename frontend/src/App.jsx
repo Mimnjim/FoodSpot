@@ -5,6 +5,7 @@ import Home from './pages/Home.jsx';
 import RestaurantDetail from './pages/RestaurantDetail.jsx';
 import Favorites from './pages/Favorites.jsx';
 import GroupSession from './pages/GroupSession.jsx';
+import About from './pages/About.jsx';
 
 export default function App() {
     const [favorites, setFavorites] = useState(() => {
@@ -62,6 +63,7 @@ export default function App() {
                     path="/group/:code"
                     element={<GroupSession key={window.location.pathname} />}
                 />
+                <Route path="/about" element={<About />} />
 
             </Routes>
         </BrowserRouter>

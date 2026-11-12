@@ -44,7 +44,7 @@ export default function RestaurantDetail() {
     }, [id]);
 
     if (loading) {
-        return <p>Loading restaurant...</p>;
+        return <p>Chargement du restaurant…</p>;
     }
 
     if (error) {
@@ -58,12 +58,12 @@ export default function RestaurantDetail() {
 
                 <main className="restaurant-not-found">
                     <span>404 — NOT FOUND</span>
-                    <h1>Restaurant not found.</h1>
+                    <h1>Restaurant introuvable.</h1>
                     <p>
-                        This restaurant doesn't exist or is no longer available.
+                        Ce restaurant n'existe pas ou n'est plus disponible.
                     </p>
                     <Link to="/" className="detail-back-button">
-                        Back to FoodSpot
+                        Retour à FoodSpot
                     </Link>
                 </main>
 
@@ -78,7 +78,7 @@ export default function RestaurantDetail() {
 
             <main className="restaurant-detail">
                 <div className="detail-navigation">
-                    <Link to="/">← Back to explore</Link>
+                    <Link to="/">← Retour à l'exploration</Link>
                     <span>Restaurant #{restaurant.id}</span>
                 </div>
 
@@ -110,18 +110,18 @@ export default function RestaurantDetail() {
                         <div className="detail-divider" />
 
                         <div className="detail-information">
-                            <h2>About this place</h2>
+                            <h2>À propos de ce lieu</h2>
                             <p>{restaurant.description || 'Description non renseignée.'}</p>
                         </div>
 
                         <div className="detail-information">
-                            <h2>Address</h2>
+                            <h2>Adresse</h2>
                             <p>{restaurant.address || 'Adresse non renseignée.'}</p>
                         </div>
 
                         {(restaurant.website || restaurant.phone || restaurant.openingHours) && (
                             <div className="detail-information">
-                                <h2>Practical information</h2>
+                                <h2>Informations pratiques</h2>
                                 {restaurant.website && (
                                     <p><a href={restaurant.website} target="_blank" rel="noreferrer">Site internet</a></p>
                                 )}
@@ -134,7 +134,7 @@ export default function RestaurantDetail() {
                             to="/"
                             className="detail-back-button"
                         >
-                            Discover more restaurants
+                            Découvrir d'autres restaurants
                         </Link>
                     </section>
                 </div>

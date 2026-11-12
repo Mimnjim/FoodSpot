@@ -153,10 +153,10 @@ export default function Home({ favorites, onToggleFavorite }) {
 
                         <div>
                             <span>EXPLORE</span>
-                            <h2>Places worth knowing.</h2>
+                            <h2>Des lieux qui valent le détour.</h2>
                         </div>
 
-                        <p>Find your next favorite restaurant.</p>
+                        <p>Trouvez votre prochain restaurant préféré.</p>
 
                     </div>
 
@@ -174,7 +174,7 @@ export default function Home({ favorites, onToggleFavorite }) {
                     />
 
                     {loading ? (
-                        <p>Loading restaurants...</p>
+                        <p>Chargement des restaurants…</p>
 
                     ) : error ? (
                         <p>{error}</p>

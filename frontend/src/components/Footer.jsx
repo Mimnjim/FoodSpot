@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router';
 import '../styles/Footer.css';
 
 export default function Footer() {
@@ -10,22 +10,16 @@ export default function Footer() {
             </div>
 
             <p>
-                Discover places worth remembering.
+                Découvrez des lieux qui méritent d'être retenus.
             </p>
 
             <div className="footer-links">
 
-                <a href="/">
-                    Explore
-                </a>
+                <Link to="/">Explorer</Link>
 
-                <a href="/">
-                    Favorites
-                </a>
+                <Link to="/favorites">Favoris</Link>
 
-                <a href="/">
-                    About
-                </a>
+                <Link to="/about">À propos</Link>
 
             </div>
 

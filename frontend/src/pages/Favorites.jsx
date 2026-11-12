@@ -47,15 +47,15 @@ export default function Favorites({ favorites, onToggleFavorite }) {
 
             <main className="favorites-main">
                 <div className="favorites-heading">
-                    <span className="favorites-eyebrow">YOUR SELECTION</span>
-                    <h1>My favorites.</h1>
+                    <span className="favorites-eyebrow">VOTRE SÉLECTION</span>
+                    <h1>Mes favoris.</h1>
                     <p>
-                        The places you love, all in one place.
+                        Les lieux que vous aimez, réunis au même endroit.
                     </p>
                 </div>
 
                 {loading ? (
-                    <p>Loading favorites...</p>
+                    <p>Chargement des favoris…</p>
                 ) : error ? (
                     <p>{error}</p>
                 ) : favoriteRestaurants.length > 0 ? (
@@ -67,13 +67,13 @@ export default function Favorites({ favorites, onToggleFavorite }) {
                 ) : (
                     <div className="favorites-empty">
                         <span className="favorites-empty-heart">♡</span>
-                        <h2>No favorites yet.</h2>
+                        <h2>Aucun favori pour le moment.</h2>
                         <p>
-                            Explore FoodSpot and save the restaurants
-                            you would love to discover.
+                            Explorez FoodSpot et enregistrez les restaurants
+                            que vous aimeriez découvrir.
                         </p>
                         <Link to="/" className="favorites-explore-button">
-                            Explore restaurants
+                            Explorer les restaurants
                         </Link>
                     </div>
                 )}

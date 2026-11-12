@@ -8,15 +8,15 @@ export default function Hero() {
             <div className="hero-content">
 
                 <span className="hero-label">
-                    RESTAURANT DISCOVERY
+                    DÉCOUVERTE CULINAIRE
                 </span>
 
                 <h1>
-                    Good food is closer than you think.
+                    Les bons restaurants sont plus proches que vous ne le pensez.
                 </h1>
 
                 <p>
-                    Discover restaurants, hidden gems and places worth remembering.
+                    Découvrez des restaurants, des adresses secrètes et des lieux mémorables.
                 </p>
 
             </div>

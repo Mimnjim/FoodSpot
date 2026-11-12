@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router';
 import '../styles/FeaturedRestaurant.css';
 
 export default function FeaturedRestaurant({ restaurant }) {
@@ -16,7 +16,7 @@ export default function FeaturedRestaurant({ restaurant }) {
             <div className="featured-content">
 
                 <span>
-                    THIS WEEK'S PICK
+                    À DÉCOUVRIR
                 </span>
 
                 <h2>
@@ -24,7 +24,7 @@ export default function FeaturedRestaurant({ restaurant }) {
                 </h2>
 
                 <p>
-                    {restaurant.description}
+                    {restaurant.description || 'Une adresse à découvrir.'}
                 </p>
 
                 <div>
@@ -37,13 +37,13 @@ export default function FeaturedRestaurant({ restaurant }) {
                     </span>
 
                     <span>
-                        ★ {restaurant.rating}
+                        {restaurant.rating !== null ? `★ ${restaurant.rating}` : 'Note non renseignée'}
                     </span>
                 </div>
 
-                <button>
-                    Discover this restaurant
-                </button>
+                <Link to={`/restaurant/${restaurant.id}`} className="featured-button">
+                    Découvrir ce restaurant
+                </Link>
 
             </div>
 

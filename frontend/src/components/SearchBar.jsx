@@ -7,7 +7,7 @@ export default function SearchBar({ search, setSearch, city, setCity }) {
 
             <input
                 type="text"
-                placeholder="Search a restaurant, cuisine or city..."
+                placeholder="Rechercher un restaurant, une cuisine ou une ville…"
                 aria-label="Rechercher un restaurant ou une cuisine"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}

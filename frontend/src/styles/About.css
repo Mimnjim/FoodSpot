@@ -1,0 +1,15 @@
+.about-main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 8rem 2rem;
+}
+
+.about-main h1 {
+    max-width: 680px;
+    margin: 1rem 0 2rem;
+}
+
+.about-main p {
+    max-width: 620px;
+    line-height: 1.8;
+}
