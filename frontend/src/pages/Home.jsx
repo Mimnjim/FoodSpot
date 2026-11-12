@@ -13,10 +13,28 @@ import '../styles/Home.css';
 export default function Home({ favorites, onToggleFavorite }) {
 
     const [restaurants, setRestaurants] = useState([]);
+    const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+
     const [loading, setLoading] = useState(true);
+    const [isFiltering, setIsFiltering] = useState(false);
     const [error, setError] = useState(null);
 
-    
+    const [search, setSearch] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('Toutes');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    // Attendre 400 ms après la dernière saisie
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 400);
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [search]);
+
+    // Récupérer tous les restaurants au chargement
     useEffect(() => {
 
         async function fetchRestaurants() {
@@ -24,7 +42,9 @@ export default function Home({ favorites, onToggleFavorite }) {
                 const response = await fetch('/api/restaurants');
 
                 if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des restaurants.');
+                    throw new Error(
+                        'Erreur lors du chargement des restaurants.'
+                    );
                 }
 
                 const data = await response.json();
@@ -43,29 +63,74 @@ export default function Home({ favorites, onToggleFavorite }) {
 
     }, []);
 
+    // Filtrer les restaurants depuis Symfony
+    useEffect(() => {
 
+        const controller = new AbortController();
 
-    const [search, setSearch] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('Toutes');
+        async function fetchFilteredRestaurants() {
 
+            setIsFiltering(true);
+
+            try {
+                setError(null);
+
+                // Construire les paramètres de recherche
+                const params = new URLSearchParams();
+
+                if (selectedCategory !== 'Toutes') {
+                    params.set('category', selectedCategory);
+                }
+
+                if (debouncedSearch.trim() !== '') {
+                    params.set('search', debouncedSearch.trim());
+                }
+
+                // Envoyer la requête à Symfony
+                const response = await fetch(
+                    `/api/restaurants?${params.toString()}`,
+                    { signal: controller.signal }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        'Erreur lors du filtrage des restaurants.'
+                    );
+                }
+
+                const data = await response.json();
+
+                setFilteredRestaurants(data);
+
+            } catch (error) {
+
+                if (error.name !== 'AbortError') {
+                    setError(error.message);
+                }
+
+            } finally {
+
+                // Ne modifier l'état que si la requête n'a pas été annulée
+                if (!controller.signal.aborted) {
+                    setIsFiltering(false);
+                }
+            }
+        }
+
+        fetchFilteredRestaurants();
+
+        return () => {
+            controller.abort();
+        };
+
+    }, [debouncedSearch, selectedCategory]);
+
+    // Récupérer les catégories disponibles
     const categories = [
         ...new Set(restaurants.map((restaurant) => restaurant.category))
     ];
 
-    const filteredRestaurants = restaurants.filter((restaurant) => {
-
-        const matchesSearch =
-            restaurant.name.toLowerCase().includes(search.toLowerCase()) ||
-            restaurant.category.toLowerCase().includes(search.toLowerCase()) ||
-            restaurant.city.toLowerCase().includes(search.toLowerCase());
-
-        const matchesCategory =
-            selectedCategory === 'Toutes' ||
-            restaurant.category === selectedCategory;
-
-        return matchesSearch && matchesCategory;
-    });
-
+    // Identifier le restaurant mis en avant
     const featuredRestaurant = restaurants[1];
 
     return (
@@ -82,18 +147,11 @@ export default function Home({ favorites, onToggleFavorite }) {
                     <div className="section-header">
 
                         <div>
-                            <span>
-                                EXPLORE
-                            </span>
-
-                            <h2>
-                                Places worth knowing.
-                            </h2>
+                            <span>EXPLORE</span>
+                            <h2>Places worth knowing.</h2>
                         </div>
 
-                        <p>
-                            Find your next favorite restaurant.
-                        </p>
+                        <p>Find your next favorite restaurant.</p>
 
                     </div>
 
@@ -110,8 +168,13 @@ export default function Home({ favorites, onToggleFavorite }) {
 
                     {loading ? (
                         <p>Loading restaurants...</p>
+
                     ) : error ? (
                         <p>{error}</p>
+
+                    ) : isFiltering ? (
+                        <p>Recherche en cours...</p>
+
                     ) : (
                         <>
                             <RestaurantList

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use App\Repository\RestaurantRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -10,10 +11,20 @@ use Symfony\Component\Routing\Attribute\Route;
 final class RestaurantController extends AbstractController
 {
     #[Route('/api/restaurants', name: 'api_restaurants', methods: ['GET'])]
-    public function index(RestaurantRepository $restaurantRepository): JsonResponse
-    {
-        // Récupérer tous les restaurants depuis SQLite
-        $restaurants = $restaurantRepository->findAll();
+    public function index(
+        Request $request,
+        RestaurantRepository $restaurantRepository
+    ): JsonResponse {
+
+        // Récupérer les paramètres de recherche
+        $category = $request->query->get('category');
+        $search = $request->query->get('search');
+
+        // Rechercher les restaurants selon les critères
+        $restaurants = $restaurantRepository->findByFilters(
+            $category,
+            $search
+        );
 
         // Transformer les objets Restaurant en tableaux JSON
         $data = [];
