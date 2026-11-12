@@ -106,15 +106,32 @@ final class GroupSessionService
                 $liked = array_map('strtolower', $preference['likedCuisines'] ?? []);
                 $avoided = array_map('strtolower', $preference['avoidedCuisines'] ?? []);
                 $category = strtolower((string) ($restaurant['category'] ?? ''));
-                if (in_array($category, $avoided, true)) {
+                $categoryTokens = preg_split('/[;,]/', $category) ?: [$category];
+                $matchesAvoided = $this->matchesAny($categoryTokens, $avoided);
+                $matchesLiked = $this->matchesAny($categoryTokens, $liked);
+                if ($matchesAvoided) {
                     $score -= 100;
                     $reasons[] = 'Une préférence de groupe exclut cette cuisine.';
-                } elseif (in_array($category, $liked, true)) {
+                } elseif ($matchesLiked) {
                     $score += 3;
                     $reasons[] = 'Cuisine appréciée par un participant.';
                 }
-                if (($preference['budget'] ?? null) !== null && $restaurant['priceRange'] === null) {
+                $budget = $preference['budget'] ?? null;
+                if ($budget !== null && $restaurant['priceRange'] !== null) {
+                    $price = strlen((string) $restaurant['priceRange']);
+                    if ($price > (int) $budget) {
+                        $score -= 4;
+                        $reasons[] = 'Le niveau de prix dépasse le budget indiqué.';
+                    }
+                } elseif ($budget !== null) {
                     $reasons[] = 'Prix non renseigné par OpenStreetMap.';
+                }
+                foreach ($preference['restrictions'] ?? [] as $restriction) {
+                    $restriction = strtolower((string) $restriction);
+                    $dietaryTags = array_map('strtolower', $restaurant['dietaryTags'] ?? []);
+                    if ($restriction !== '' && !$this->matchesAny($dietaryTags, [$restriction])) {
+                        $reasons[] = 'Compatibilité alimentaire non confirmée.';
+                    }
                 }
             }
             $restaurant['score'] = $score;
@@ -130,6 +147,9 @@ final class GroupSessionService
         $this->assertActive($session);
         if (!in_array($participantId, array_column($session->getParticipants(), 'id'), true)) {
             throw new RuntimeException('Participant inconnu.');
+        }
+        if (!preg_match('/^(local|osm)-[A-Za-z0-9]+$/', $restaurantId)) {
+            throw new RuntimeException('Restaurant invalide.');
         }
         $votes = $session->getVotes();
         $votes[$participantId] = $restaurantId;
@@ -179,11 +199,26 @@ final class GroupSessionService
         if ($session->getStatus() === 'decided') {
             throw new RuntimeException('Cette session a déjà rendu sa décision.');
         }
+
         if ($session->getExpiresAt() <= new \DateTimeImmutable()) {
             $session->setStatus('expired');
             $this->entityManager->flush();
             throw new RuntimeException('Cette session a expiré.');
         }
+    }
+
+    /** @param list<string> $values @param list<string> $needles */
+    private function matchesAny(array $values, array $needles): bool
+    {
+        foreach ($values as $value) {
+            foreach ($needles as $needle) {
+                if ($needle !== '' && str_contains($value, $needle)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function generateCode(): string

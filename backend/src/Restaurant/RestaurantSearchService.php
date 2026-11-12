@@ -34,6 +34,7 @@ final class RestaurantSearchService
                 'location' => null,
                 'rating' => $restaurant->getRating(),
                 'priceRange' => $restaurant->getPriceRange(),
+                'dietaryTags' => [],
                 'description' => $restaurant->getDescription(),
                 'image' => $restaurant->getImage(),
                 'website' => null,

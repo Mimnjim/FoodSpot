@@ -19,6 +19,15 @@ final class RestaurantNormalizer
         $street = $tags['addr:street'] ?? null;
         $houseNumber = $tags['addr:housenumber'] ?? null;
         $address = trim(implode(' ', array_filter([$houseNumber, $street])));
+        $dietaryTags = array_filter(
+            $tags,
+            static fn (mixed $value, string $key): bool => str_starts_with($key, 'diet:') && $value === 'yes',
+            ARRAY_FILTER_USE_BOTH,
+        );
+        $priceLevel = $tags['price:level'] ?? null;
+        $priceRange = is_string($priceLevel) && ctype_digit($priceLevel)
+            ? str_repeat('€', min(4, max(1, (int) $priceLevel)))
+            : null;
 
         return [
             'id' => 'osm-' . ($element['id'] ?? ''),
@@ -30,7 +39,8 @@ final class RestaurantNormalizer
             'location' => $coordinates,
             'category' => $tags['cuisine'] ?? 'Restaurant',
             'rating' => null,
-            'priceRange' => null,
+            'priceRange' => $priceRange,
+            'dietaryTags' => array_keys($dietaryTags),
             'website' => $tags['website'] ?? $tags['contact:website'] ?? null,
             'phone' => $tags['phone'] ?? $tags['contact:phone'] ?? null,
             'openingHours' => $tags['opening_hours'] ?? null,

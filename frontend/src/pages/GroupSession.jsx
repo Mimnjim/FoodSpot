@@ -201,11 +201,20 @@ export default function GroupSession() {
                         <h1>{session.name}</h1>
                         <p>{session.city} · {session.participants.length} participant(s) · {Object.keys(session.preferences || {}).length} réponse(s)</p>
                         {session.status !== 'collecting' ? (
-                            <p className="group-status">
-                                {session.status === 'expired'
-                                    ? 'Cette session a expiré.'
-                                    : 'La décision finale a déjà été prise.'}
-                            </p>
+                            <>
+                                <p className="group-status">
+                                    {session.status === 'expired'
+                                        ? 'Cette session a expiré.'
+                                        : 'La décision finale a déjà été prise.'}
+                                </p>
+                                {session.result && (
+                                    <div className="group-result">
+                                        <span>DECISION FINALE</span>
+                                        <strong>{session.result.restaurantId}</strong>
+                                        <p>Choix effectué avec le mode {session.result.mode}.</p>
+                                    </div>
+                                )}
+                            </>
                         ) : !participantId && (
                             <form onSubmit={joinSession} className="group-form">
                                 <input required placeholder="Votre pseudo" value={nickname} onChange={(event) => setNickname(event.target.value)} />

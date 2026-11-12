@@ -57,8 +57,11 @@ export default function App() {
                         />
                     }
                 />
-                <Route path="/group" element={<GroupSession />} />
-                <Route path="/group/:code" element={<GroupSession />} />
+                <Route path="/group" element={<GroupSession key="new-group-session" />} />
+                <Route
+                    path="/group/:code"
+                    element={<GroupSession key={window.location.pathname} />}
+                />
 
             </Routes>
         </BrowserRouter>
