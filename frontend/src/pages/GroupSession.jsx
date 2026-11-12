@@ -28,6 +28,7 @@ export default function GroupSession() {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [joinCode, setJoinCode] = useState('');
+    const [result, setResult] = useState(null);
 
     useEffect(() => {
         if (code) {
@@ -106,6 +107,20 @@ export default function GroupSession() {
         } catch (requestError) {
             setError(requestError.message);
         }
+
+        async function decide(event) {
+            const mode = event.currentTarget.dataset.mode;
+            try {
+                const data = await request(`/api/group-sessions/${code}/decision`, {
+                    method: 'POST',
+                    body: JSON.stringify({ mode }),
+                });
+                setResult(data.result);
+                setSession(await request(`/api/group-sessions/${code}`));
+            } catch (requestError) {
+                setError(requestError.message);
+            }
+        }
     }
 
     return (
@@ -159,6 +174,19 @@ export default function GroupSession() {
                                         </article>
                                     ))}
                                 </div>
+                                {session.votes && Object.keys(session.votes).length > 0 && (
+                                    <div className="decision-actions">
+                                        <button type="button" data-mode="auto" onClick={decide}>Décider automatiquement</button>
+                                        <button type="button" data-mode="roulette" onClick={decide}>Lancer la roulette</button>
+                                    </div>
+                                )}
+                                {(result || session.result) && (
+                                    <div className="group-result">
+                                        <span>DECISION FINALE</span>
+                                        <strong>{(result || session.result).restaurantId}</strong>
+                                        <p>Choix effectué avec le mode {(result || session.result).mode}.</p>
+                                    </div>
+                                )}
                             </>
                         )}
                     </section>

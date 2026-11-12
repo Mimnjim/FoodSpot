@@ -22,6 +22,9 @@ final class GroupSessionController extends AbstractController
             }
         }
 
+        if (strlen(trim($data['name'])) > 120 || strlen(trim($data['city'])) > 120 || strlen(trim($data['nickname'])) > 60) {
+            return $this->json(['message' => 'Les champs dépassent la longueur autorisée.'], 400);
+        }
         $session = $service->create(trim($data['name']), trim($data['city']), trim($data['nickname']));
         return $this->json($this->serialize($session), 201);
     }
@@ -30,6 +33,9 @@ final class GroupSessionController extends AbstractController
     public function show(string $code, GroupSessionRepository $repository): JsonResponse
     {
         $session = $repository->findByCode($code);
+        if ($session !== null && $session->getStatus() === 'collecting' && $session->getExpiresAt() <= new \DateTimeImmutable()) {
+            $session->setStatus('expired');
+        }
         return $session === null
             ? $this->json(['message' => 'Session introuvable.'], 404)
             : $this->json($this->serialize($session));
@@ -46,7 +52,14 @@ final class GroupSessionController extends AbstractController
         if (!is_string($data['nickname'] ?? null) || trim($data['nickname']) === '') {
             return $this->json(['message' => 'Le pseudonyme est requis.'], 400);
         }
-        return $this->json($service->join($session, trim($data['nickname'])), 201);
+        if (strlen(trim($data['nickname'])) > 60) {
+            return $this->json(['message' => 'Le pseudonyme est trop long.'], 400);
+        }
+        try {
+            return $this->json($service->join($session, trim($data['nickname'])), 201);
+        } catch (\RuntimeException $exception) {
+            return $this->json(['message' => $exception->getMessage()], 400);
+        }
     }
 
     #[Route('/api/group-sessions/{code}/preferences', name: 'api_group_session_preferences', methods: ['PUT'])]
@@ -90,12 +103,32 @@ final class GroupSessionController extends AbstractController
         if ($session === null) {
             return $this->json(['message' => 'Session introuvable.'], 404);
         }
+
         if (!is_string($data['participantId'] ?? null) || !is_string($data['restaurantId'] ?? null)) {
             return $this->json(['message' => 'participantId et restaurantId sont requis.'], 400);
         }
         try {
             $service->vote($session, $data['participantId'], $data['restaurantId']);
             return $this->json(['message' => 'Vote enregistré.']);
+        } catch (\RuntimeException $exception) {
+            return $this->json(['message' => $exception->getMessage()], 400);
+        }
+    }
+
+    #[Route('/api/group-sessions/{code}/decision', name: 'api_group_session_decision', methods: ['POST'])]
+    public function decision(string $code, Request $request, GroupSessionRepository $repository, GroupSessionService $service): JsonResponse
+    {
+        $session = $repository->findByCode($code);
+        $data = $this->jsonBody($request);
+        if ($session === null) {
+            return $this->json(['message' => 'Session introuvable.'], 404);
+        }
+        $mode = $data['mode'] ?? 'auto';
+        if (!is_string($mode) || !in_array($mode, ['auto', 'roulette'], true)) {
+            return $this->json(['message' => 'Le mode doit être auto ou roulette.'], 400);
+        }
+        try {
+            return $this->json(['result' => $service->decide($session, $mode)]);
         } catch (\RuntimeException $exception) {
             return $this->json(['message' => $exception->getMessage()], 400);
         }

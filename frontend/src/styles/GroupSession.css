@@ -74,3 +74,25 @@
 
 .group-message { color: #26734d; }
 .group-error { color: #a33a2a; }
+
+.decision-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .7rem;
+    margin-top: 1.5rem;
+}
+
+.group-result {
+    display: grid;
+    gap: .4rem;
+    margin-top: 2rem;
+    padding: 1.2rem;
+    background: var(--light-accent);
+}
+
+.group-result span {
+    color: var(--accent);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+}

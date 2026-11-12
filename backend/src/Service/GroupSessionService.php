@@ -36,6 +36,7 @@ final class GroupSessionService
 
     public function join(GroupSession $session, string $nickname): array
     {
+        $this->assertActive($session);
         $participants = $session->getParticipants();
         $participants[] = [
             'id' => bin2hex(random_bytes(6)),
@@ -49,6 +50,7 @@ final class GroupSessionService
 
     public function savePreferences(GroupSession $session, string $participantId, array $preferences): void
     {
+        $this->assertActive($session);
         $participantIds = array_column($session->getParticipants(), 'id');
         if (!in_array($participantId, $participantIds, true)) {
             throw new RuntimeException('Participant inconnu.');
@@ -62,6 +64,7 @@ final class GroupSessionService
     /** @return list<array<string, mixed>> */
     public function recommendations(GroupSession $session): array
     {
+        $this->assertActive($session);
         $restaurants = $this->searchService->search($session->getCity(), null, null);
         $preferences = $session->getPreferences();
         $scored = [];
@@ -90,6 +93,7 @@ final class GroupSessionService
 
     public function vote(GroupSession $session, string $participantId, string $restaurantId): void
     {
+        $this->assertActive($session);
         if (!in_array($participantId, array_column($session->getParticipants(), 'id'), true)) {
             throw new RuntimeException('Participant inconnu.');
         }
@@ -97,6 +101,55 @@ final class GroupSessionService
         $votes[$participantId] = $restaurantId;
         $session->setVotes($votes);
         $this->entityManager->flush();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function decide(GroupSession $session, string $mode = 'auto'): array
+    {
+        $this->assertActive($session);
+        $votes = $session->getVotes();
+        if ($votes === []) {
+            throw new RuntimeException('Au moins un vote est nécessaire.');
+        }
+
+        $counts = array_count_values(array_values($votes));
+        if ($mode === 'roulette') {
+            $restaurantId = array_rand($counts);
+        } else {
+            arsort($counts);
+            $topScore = reset($counts);
+            $winners = array_keys(array_filter(
+                $counts,
+                static fn (int $score): bool => $score === $topScore,
+            ));
+            $restaurantId = $winners[0];
+        }
+
+        $result = [
+            'restaurantId' => (string) $restaurantId,
+            'mode' => $mode,
+            'votes' => $counts,
+            'decidedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+        ];
+        $session->setResult($result);
+        $session->setStatus('decided');
+        $this->entityManager->flush();
+
+        return $result;
+    }
+
+    private function assertActive(GroupSession $session): void
+    {
+        if ($session->getStatus() === 'decided') {
+            throw new RuntimeException('Cette session a déjà rendu sa décision.');
+        }
+        if ($session->getExpiresAt() <= new \DateTimeImmutable()) {
+            $session->setStatus('expired');
+            $this->entityManager->flush();
+            throw new RuntimeException('Cette session a expiré.');
+        }
     }
 
     private function generateCode(): string
