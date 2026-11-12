@@ -30,14 +30,11 @@ final class RestaurantController extends AbstractController
     #[Route('/api/restaurants/{id}', name: 'api_restaurant_show', methods: ['GET'])]
     public function show(string $id, RestaurantSearchService $searchService): JsonResponse
     {
-        if (!str_starts_with($id, 'local-')) {
-            return $this->json(['message' => 'Les détails OpenStreetMap sont disponibles depuis les résultats de recherche.'], 404);
+        try {
+            $restaurant = $searchService->findById($id);
+        } catch (\RuntimeException $exception) {
+            return $this->json(['message' => $exception->getMessage()], 503);
         }
-
-        $restaurant = array_values(array_filter(
-            $searchService->search(null, null, null),
-            static fn (array $item): bool => $item['id'] === $id,
-        ))[0] ?? null;
 
         return $restaurant === null
             ? $this->json(['message' => 'Restaurant introuvable'], 404)

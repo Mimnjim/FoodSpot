@@ -43,4 +43,24 @@ final class RestaurantSearchService
             $this->localRepository->findByFilters($category, $search),
         );
     }
+
+    /** @return array<string, mixed>|null */
+    public function findById(string $id): ?array
+    {
+        if (str_starts_with($id, 'osm-')) {
+            return $this->overpassProvider->findByProviderId(substr($id, 4));
+        }
+
+        if (!str_starts_with($id, 'local-') || !ctype_digit(substr($id, 6))) {
+            return null;
+        }
+
+        foreach ($this->search(null, null, null) as $restaurant) {
+            if ($restaurant['id'] === $id) {
+                return $restaurant;
+            }
+        }
+
+        return null;
+    }
 }

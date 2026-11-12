@@ -74,6 +74,15 @@
 
 .group-message { color: #26734d; }
 .group-error { color: #a33a2a; }
+.group-sync,
+.group-status { color: var(--secondary); }
+
+.group-form button:disabled,
+.group-panel > button:disabled,
+.recommendations button:disabled {
+    cursor: wait;
+    opacity: .6;
+}
 
 .decision-actions {
     display: flex;

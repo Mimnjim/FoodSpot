@@ -29,12 +29,18 @@ export default function GroupSession() {
     const [message, setMessage] = useState('');
     const [joinCode, setJoinCode] = useState('');
     const [result, setResult] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         if (code) {
-            const refresh = () => request(`/api/group-sessions/${code}`)
-                .then(setSession)
-                .catch((requestError) => setError(requestError.message));
+            const refresh = () => {
+                setIsRefreshing(true);
+                return request(`/api/group-sessions/${code}`)
+                    .then(setSession)
+                    .catch((requestError) => setError(requestError.message))
+                    .finally(() => setIsRefreshing(false));
+            };
             refresh();
             const interval = window.setInterval(refresh, 10000);
             return () => window.clearInterval(interval);
@@ -43,6 +49,7 @@ export default function GroupSession() {
 
     async function createSession(event) {
         event.preventDefault();
+        setIsSubmitting(true);
         try {
             const data = await request('/api/group-sessions', {
                 method: 'POST',
@@ -55,11 +62,14 @@ export default function GroupSession() {
             window.location.href = `/group/${data.code}`;
         } catch (requestError) {
             setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     async function joinSession(event) {
         event.preventDefault();
+        setIsSubmitting(true);
         try {
             const participant = await request(`/api/group-sessions/${code}/participants`, {
                 method: 'POST',
@@ -71,11 +81,14 @@ export default function GroupSession() {
             setMessage('Vous avez rejoint la session.');
         } catch (requestError) {
             setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     async function savePreferences(event) {
         event.preventDefault();
+        setIsSubmitting(true);
         try {
             await request(`/api/group-sessions/${code}/preferences`, {
                 method: 'PUT',
@@ -89,19 +102,25 @@ export default function GroupSession() {
             setMessage('Préférences enregistrées.');
         } catch (requestError) {
             setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     async function loadRecommendations() {
+        setIsSubmitting(true);
         try {
             const data = await request(`/api/group-sessions/${code}/recommendations`);
             setRecommendations(data.recommendations);
         } catch (requestError) {
             setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     async function vote(restaurantId) {
+        setIsSubmitting(true);
         try {
             await request(`/api/group-sessions/${code}/votes`, {
                 method: 'POST',
@@ -110,12 +129,15 @@ export default function GroupSession() {
             setMessage('Vote enregistré.');
         } catch (requestError) {
             setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
         }
 
     }
 
     async function decide(event) {
         const mode = event.currentTarget.dataset.mode;
+        setIsSubmitting(true);
         try {
             const data = await request(`/api/group-sessions/${code}/decision`, {
                 method: 'POST',
@@ -125,6 +147,8 @@ export default function GroupSession() {
             setSession(await request(`/api/group-sessions/${code}`));
         } catch (requestError) {
             setError(requestError.message);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -140,7 +164,7 @@ export default function GroupSession() {
                             <input required placeholder="Nom de la session" value={name} onChange={(event) => setName(event.target.value)} />
                             <input required placeholder="Ville" value={city} onChange={(event) => setCity(event.target.value)} />
                             <input required placeholder="Votre pseudo" value={nickname} onChange={(event) => setNickname(event.target.value)} />
-                            <button type="submit">Créer la session</button>
+                            <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Création…' : 'Créer la session'}</button>
                         </form>
                         <p className="group-or">Vous avez un code ?</p>
                         <form className="group-form" onSubmit={(event) => {
@@ -156,33 +180,39 @@ export default function GroupSession() {
                         <span className="eyebrow">SESSION {session.code}</span>
                         <h1>{session.name}</h1>
                         <p>{session.city} · {session.participants.length} participant(s)</p>
-                        {!participantId && (
+                        {session.status !== 'collecting' ? (
+                            <p className="group-status">
+                                {session.status === 'expired'
+                                    ? 'Cette session a expiré.'
+                                    : 'La décision finale a déjà été prise.'}
+                            </p>
+                        ) : !participantId && (
                             <form onSubmit={joinSession} className="group-form">
                                 <input required placeholder="Votre pseudo" value={nickname} onChange={(event) => setNickname(event.target.value)} />
-                                <button type="submit">Rejoindre</button>
+                                <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Connexion…' : 'Rejoindre'}</button>
                             </form>
                         )}
-                        {participantId && (
+                        {participantId && session.status === 'collecting' && (
                             <>
                                 <form onSubmit={savePreferences} className="group-form">
                                     <input placeholder="Cuisines aimées, séparées par des virgules" value={likedCuisines} onChange={(event) => setLikedCuisines(event.target.value)} />
-                                    <button type="submit">Enregistrer mes préférences</button>
+                                    <button type="submit" disabled={isSubmitting}>Enregistrer mes préférences</button>
                                 </form>
-                                <button type="button" onClick={loadRecommendations}>Voir les recommandations</button>
+                                <button type="button" onClick={loadRecommendations} disabled={isSubmitting}>Voir les recommandations</button>
                                 <div className="recommendations">
                                     {recommendations.map((restaurant) => (
                                         <article key={restaurant.id}>
                                             <strong>{restaurant.name}</strong>
                                             <span>{restaurant.category || 'Restaurant'}</span>
                                             <p>{restaurant.reason}</p>
-                                            <button type="button" onClick={() => vote(restaurant.id)}>Voter pour ce lieu</button>
+                                            <button type="button" onClick={() => vote(restaurant.id)} disabled={isSubmitting}>Voter pour ce lieu</button>
                                         </article>
                                     ))}
                                 </div>
                                 {session.votes && Object.keys(session.votes).length > 0 && (
                                     <div className="decision-actions">
-                                        <button type="button" data-mode="auto" onClick={decide}>Décider automatiquement</button>
-                                        <button type="button" data-mode="roulette" onClick={decide}>Lancer la roulette</button>
+                                        <button type="button" data-mode="auto" onClick={decide} disabled={isSubmitting}>Décider automatiquement</button>
+                                        <button type="button" data-mode="roulette" onClick={decide} disabled={isSubmitting}>Lancer la roulette</button>
                                     </div>
                                 )}
                                 {(result || session.result) && (
@@ -198,6 +228,7 @@ export default function GroupSession() {
                 ) : (
                     <section className="group-panel"><p>Chargement de la session…</p></section>
                 )}
+                {isRefreshing && <p className="group-sync">Synchronisation…</p>}
                 {message && <p className="group-message">{message}</p>}
                 {error && <p className="group-error">{error}</p>}
             </main>

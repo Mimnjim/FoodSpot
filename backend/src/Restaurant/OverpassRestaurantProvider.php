@@ -61,6 +61,44 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
         });
     }
 
+    public function findByProviderId(string $providerId): ?array
+    {
+        if (!ctype_digit($providerId)) {
+            return null;
+        }
+
+        $query = '[out:json][timeout:12];nwr(' . $providerId . ');out center tags;';
+        $payload = $this->cache->get('overpass_id_' . $providerId, function (ItemInterface $item) use ($query): array {
+            $item->expiresAfter(300);
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => "Content-Type: application/x-www-form-urlencoded\r\nUser-Agent: FoodSpot/1.0\r\n",
+                    'content' => http_build_query(['data' => $query]),
+                    'timeout' => 15,
+                    'ignore_errors' => true,
+                ],
+            ]);
+            $response = @file_get_contents(self::ENDPOINT, false, $context);
+            $status = $this->responseStatus($http_response_header ?? []);
+            if ($response === false || $status >= 400) {
+                throw new RuntimeException('Le service OpenStreetMap est momentanément indisponible.');
+            }
+
+            try {
+                $decoded = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                throw new RuntimeException('Réponse OpenStreetMap invalide.', 0, $exception);
+            }
+
+            return is_array($decoded['elements'] ?? null) ? $decoded['elements'] : [];
+        });
+
+        return isset($payload[0]) && is_array($payload[0])
+            ? $this->normalizer->normalize($payload[0])
+            : null;
+    }
+
     private function buildQuery(string $city, ?string $category, ?string $search): string
     {
         $area = 'area["name"="' . $this->escape($city) . '"]["boundary"="administrative"]->.searchArea;';
