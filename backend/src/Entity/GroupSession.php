@@ -25,6 +25,9 @@ class GroupSession
     #[ORM\Column(length: 20)]
     private string $status = 'collecting';
 
+    #[ORM\Column(length: 24)]
+    private string $creatorParticipantId;
+
     #[ORM\Column]
     private \DateTimeImmutable $expiresAt;
 
@@ -54,6 +57,8 @@ class GroupSession
     public function setCity(string $city): static { $this->city = $city; return $this; }
     public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): static { $this->status = $status; return $this; }
+    public function getCreatorParticipantId(): string { return $this->creatorParticipantId; }
+    public function setCreatorParticipantId(string $value): static { $this->creatorParticipantId = $value; return $this; }
     public function getExpiresAt(): \DateTimeImmutable { return $this->expiresAt; }
     public function getParticipants(): array { return json_decode($this->participants, true) ?: []; }
     public function setParticipants(array $value): static { $this->participants = json_encode($value, JSON_THROW_ON_ERROR); return $this; }

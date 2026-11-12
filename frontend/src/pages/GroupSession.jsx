@@ -161,7 +161,7 @@ export default function GroupSession() {
         try {
             const data = await request(`/api/group-sessions/${code}/decision`, {
                 method: 'POST',
-                body: JSON.stringify({ mode }),
+                body: JSON.stringify({ participantId, mode }),
             });
             setResult(data.result);
             setSession(await request(`/api/group-sessions/${code}`));
@@ -210,7 +210,8 @@ export default function GroupSession() {
                                 {session.result && (
                                     <div className="group-result">
                                         <span>DECISION FINALE</span>
-                                        <strong>{session.result.restaurantId}</strong>
+                                        <strong>{session.result.restaurantName || session.result.restaurantId}</strong>
+                                        {session.result.restaurant?.address && <p>{session.result.restaurant.address}</p>}
                                         <p>Choix effectué avec le mode {session.result.mode}.</p>
                                     </div>
                                 )}
@@ -248,7 +249,7 @@ export default function GroupSession() {
                                         </article>
                                     ))}
                                 </div>
-                                {session.votes && Object.keys(session.votes).length > 0 && (
+                                {participantId === session.creatorParticipantId && session.votes && Object.keys(session.votes).length > 0 && (
                                     <div className="decision-actions">
                                         <button type="button" data-mode="auto" onClick={decide} disabled={isSubmitting}>Décider automatiquement</button>
                                         <button type="button" data-mode="roulette" onClick={decide} disabled={isSubmitting}>Lancer la roulette</button>
@@ -257,7 +258,8 @@ export default function GroupSession() {
                                 {(result || session.result) && (
                                     <div className="group-result">
                                         <span>DECISION FINALE</span>
-                                        <strong>{(result || session.result).restaurantId}</strong>
+                                        <strong>{(result || session.result).restaurantName || (result || session.result).restaurantId}</strong>
+                                        {(result || session.result).restaurant?.address && <p>{(result || session.result).restaurant.address}</p>}
                                         <p>Choix effectué avec le mode {(result || session.result).mode}.</p>
                                     </div>
                                 )}

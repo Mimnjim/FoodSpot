@@ -20,11 +20,13 @@ final class GroupSessionService
     public function create(string $name, string $city, string $nickname): GroupSession
     {
         $session = new GroupSession();
+        $participantId = bin2hex(random_bytes(6));
         $session->setCode($this->generateCode());
         $session->setName($name);
         $session->setCity($city);
+        $session->setCreatorParticipantId($participantId);
         $session->setParticipants([[
-            'id' => bin2hex(random_bytes(6)),
+            'id' => $participantId,
             'nickname' => $nickname,
             'joinedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
         ]]);
@@ -81,6 +83,8 @@ final class GroupSessionService
         }
         if ($participants === []) {
             $session->setStatus('expired');
+        } elseif ($session->getCreatorParticipantId() === $participantId) {
+            $session->setCreatorParticipantId($participants[0]['id']);
         }
         $session->setParticipants($participants);
         $preferences = $session->getPreferences();
@@ -160,9 +164,12 @@ final class GroupSessionService
     /**
      * @return array<string, mixed>
      */
-    public function decide(GroupSession $session, string $mode = 'auto'): array
+    public function decide(GroupSession $session, string $participantId, string $mode = 'auto'): array
     {
         $this->assertActive($session);
+        if ($session->getCreatorParticipantId() !== $participantId) {
+            throw new RuntimeException('Seul le créateur de la session peut prendre la décision.');
+        }
         $votes = $session->getVotes();
         if ($votes === []) {
             throw new RuntimeException('Au moins un vote est nécessaire.');
@@ -181,8 +188,15 @@ final class GroupSessionService
             $restaurantId = $winners[0];
         }
 
+        $restaurant = $this->searchService->findById((string) $restaurantId);
+        if ($restaurant === null) {
+            throw new RuntimeException('Le restaurant choisi est introuvable.');
+        }
+
         $result = [
             'restaurantId' => (string) $restaurantId,
+            'restaurantName' => $restaurant['name'],
+            'restaurant' => $restaurant,
             'mode' => $mode,
             'votes' => $counts,
             'decidedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),

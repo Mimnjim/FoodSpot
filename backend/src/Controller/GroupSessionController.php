@@ -145,8 +145,11 @@ final class GroupSessionController extends AbstractController
         if (!is_string($mode) || !in_array($mode, ['auto', 'roulette'], true)) {
             return $this->json(['message' => 'Le mode doit être auto ou roulette.'], 400);
         }
+        if (!is_string($data['participantId'] ?? null) || trim($data['participantId']) === '') {
+            return $this->json(['message' => 'participantId est requis.'], 400);
+        }
         try {
-            return $this->json(['result' => $service->decide($session, $mode)]);
+            return $this->json(['result' => $service->decide($session, $data['participantId'], $mode)]);
         } catch (\RuntimeException $exception) {
             return $this->json(['message' => $exception->getMessage()], 400);
         }
@@ -167,6 +170,7 @@ final class GroupSessionController extends AbstractController
             'name' => $session->getName(),
             'city' => $session->getCity(),
             'status' => $session->getStatus(),
+            'creatorParticipantId' => $session->getCreatorParticipantId(),
             'expiresAt' => $session->getExpiresAt()->format(DATE_ATOM),
             'participants' => $session->getParticipants(),
             'preferences' => $session->getPreferences(),
