@@ -16,7 +16,12 @@ export default function RestaurantDetail() {
 
         async function fetchRestaurant() {
             try {
-                const response = await fetch('/api/restaurants');
+                const response = await fetch(`/api/restaurants/${id}`);
+
+                if (response.status === 404) {
+                    setRestaurant(null);
+                    return;
+                }
 
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement du restaurant.');
@@ -24,11 +29,7 @@ export default function RestaurantDetail() {
 
                 const data = await response.json();
 
-                const foundRestaurant = data.find(
-                    (item) => item.id === Number(id)
-                );
-
-                setRestaurant(foundRestaurant || null);
+                setRestaurant(data);
 
             } catch (error) {
                 setError(error.message);
