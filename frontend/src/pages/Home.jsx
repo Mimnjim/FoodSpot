@@ -191,7 +191,7 @@ export default function Home({ favorites, onToggleFavorite }) {
                             />
 
                             {filteredRestaurants.length === 0 && (
-                                <p>No restaurants found.</p>
+                                <p>Aucun restaurant trouvé pour ces critères.</p>
                             )}
                         </>
                     )}

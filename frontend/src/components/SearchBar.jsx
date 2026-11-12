@@ -3,7 +3,7 @@ import '../styles/SearchBar.css';
 
 export default function SearchBar({ search, setSearch, city, setCity }) {
     return (
-        <div className="search-bar">
+        <div className="search-bar" role="search">
 
             <input
                 type="text"

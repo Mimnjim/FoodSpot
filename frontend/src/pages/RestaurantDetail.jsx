@@ -116,8 +116,19 @@ export default function RestaurantDetail() {
 
                         <div className="detail-information">
                             <h2>Address</h2>
-                            <p>{restaurant.address}</p>
+                            <p>{restaurant.address || 'Adresse non renseignée.'}</p>
                         </div>
+
+                        {(restaurant.website || restaurant.phone || restaurant.openingHours) && (
+                            <div className="detail-information">
+                                <h2>Practical information</h2>
+                                {restaurant.website && (
+                                    <p><a href={restaurant.website} target="_blank" rel="noreferrer">Site internet</a></p>
+                                )}
+                                {restaurant.phone && <p>{restaurant.phone}</p>}
+                                {restaurant.openingHours && <p>{restaurant.openingHours}</p>}
+                            </div>
+                        )}
 
                         <Link
                             to="/"

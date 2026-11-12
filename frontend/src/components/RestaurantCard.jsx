@@ -28,12 +28,12 @@ export default function RestaurantCard({
                         </span>
 
                         <h3>{restaurant.name}</h3>
-                        <p>{restaurant.city}</p>
+                        <p>{restaurant.city || 'Ville non renseignée'}</p>
                     </div>
 
                     <div className="restaurant-card-meta">
-                        {restaurant.rating !== null && <span>★ {restaurant.rating}</span>}
-                        {restaurant.priceRange && <span>{restaurant.priceRange}</span>}
+                        {restaurant.rating !== null ? <span>★ {restaurant.rating}</span> : <span>Note non renseignée</span>}
+                        {restaurant.priceRange ? <span>{restaurant.priceRange}</span> : <span>Prix non renseigné</span>}
                     </div>
                 </div>
             </Link>

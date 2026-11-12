@@ -17,7 +17,7 @@ class RestaurantRepository extends ServiceEntityRepository
     }
 
 
-    public function findByFilters(?string $category, ?string $search): array
+    public function findByFilters(?string $category, ?string $search, ?string $city = null): array
     {
         // Construire une requête sur l'entité Restaurant
         $queryBuilder = $this->createQueryBuilder('r');
@@ -38,6 +38,12 @@ class RestaurantRepository extends ServiceEntityRepository
                     OR LOWER(r.city) LIKE LOWER(:search)'
                 )
                 ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($city !== null && trim($city) !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(r.city) LIKE LOWER(:city)')
+                ->setParameter('city', '%' . trim($city) . '%');
         }
 
         // Exécuter la requête et retourner les résultats

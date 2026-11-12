@@ -6,10 +6,11 @@ export default function FeaturedRestaurant({ restaurant }) {
         <section className="featured-restaurant">
 
             <div className="featured-image">
-                <img
-                    src={restaurant.image}
-                    alt={restaurant.name}
-                />
+                {restaurant.image ? (
+                    <img src={restaurant.image} alt={restaurant.name} />
+                ) : (
+                    <span className="featured-image-placeholder">FoodSpot</span>
+                )}
             </div>
 
             <div className="featured-content">

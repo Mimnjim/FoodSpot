@@ -19,7 +19,36 @@ final class RestaurantSearchService
     public function search(?string $city, ?string $category, ?string $search): array
     {
         if (trim((string) $city) !== '') {
-            return $this->overpassProvider->search($city, $category, $search);
+            try {
+                return $this->overpassProvider->search($city, $category, $search);
+            } catch (RuntimeException $exception) {
+                $fallback = $this->localRepository->findByFilters($category, $search, $city);
+                if ($fallback === []) {
+                    throw $exception;
+                }
+
+                return array_map(
+                    static fn ($restaurant): array => [
+                        'id' => 'local-' . $restaurant->getId(),
+                        'provider' => 'local-fallback',
+                        'providerId' => (string) $restaurant->getId(),
+                        'name' => $restaurant->getName(),
+                        'category' => $restaurant->getCategory(),
+                        'city' => $restaurant->getCity(),
+                        'address' => $restaurant->getAddress(),
+                        'location' => null,
+                        'rating' => $restaurant->getRating(),
+                        'priceRange' => $restaurant->getPriceRange(),
+                        'dietaryTags' => [],
+                        'description' => $restaurant->getDescription(),
+                        'image' => $restaurant->getImage(),
+                        'website' => null,
+                        'phone' => null,
+                        'openingHours' => null,
+                    ],
+                    $fallback,
+                );
+            }
         }
 
         return array_map(
