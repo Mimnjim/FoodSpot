@@ -23,6 +23,9 @@ export default function Home({ favorites, onToggleFavorite }) {
     const [city, setCity] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Toutes');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const hasActiveFilters = debouncedSearch.trim() !== ''
+        || city.trim() !== ''
+        || selectedCategory !== 'Toutes';
 
     // Attendre 400 ms après la dernière saisie
     useEffect(() => {
@@ -64,8 +67,11 @@ export default function Home({ favorites, onToggleFavorite }) {
 
     }, []);
 
-    // Filtrer les restaurants depuis Symfony
+    // Filtrer les restaurants depuis Symfony uniquement lorsqu'un critère est actif
     useEffect(() => {
+        if (!hasActiveFilters) {
+            return undefined;
+        }
 
         const controller = new AbortController();
 
@@ -128,7 +134,7 @@ export default function Home({ favorites, onToggleFavorite }) {
             controller.abort();
         };
 
-    }, [debouncedSearch, selectedCategory, city]);
+    }, [debouncedSearch, selectedCategory, city, restaurants, hasActiveFilters]);
 
     // Récupérer les catégories disponibles
     const categories = [
@@ -136,7 +142,8 @@ export default function Home({ favorites, onToggleFavorite }) {
     ];
 
     // Identifier le restaurant mis en avant
-    const featuredRestaurant = restaurants[1];
+    const displayedRestaurants = hasActiveFilters ? filteredRestaurants : restaurants;
+    const featuredRestaurant = restaurants[0];
 
     return (
         <div className="home">
@@ -185,12 +192,12 @@ export default function Home({ favorites, onToggleFavorite }) {
                     ) : (
                         <>
                             <RestaurantList
-                                restaurants={filteredRestaurants}
+                                restaurants={displayedRestaurants}
                                 favorites={favorites}
                                 onToggleFavorite={onToggleFavorite}
                             />
 
-                            {filteredRestaurants.length === 0 && (
+                            {displayedRestaurants.length === 0 && (
                                 <p>Aucun restaurant trouvé pour ces critères.</p>
                             )}
                         </>
