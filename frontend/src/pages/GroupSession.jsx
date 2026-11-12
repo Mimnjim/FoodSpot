@@ -137,6 +137,7 @@ export default function GroupSession() {
         } finally {
             setIsSubmitting(false);
         }
+
     }
 
     async function vote(restaurantId) {
@@ -172,6 +173,10 @@ export default function GroupSession() {
         }
     }
 
+    function hasVoted(participant) {
+        return Boolean(session?.votes?.[participant.id]);
+    }
+
     return (
         <div className="group-page">
             <Header />
@@ -200,6 +205,13 @@ export default function GroupSession() {
                         <span className="eyebrow">SESSION {session.code}</span>
                         <h1>{session.name}</h1>
                         <p>{session.city} · {session.participants.length} participant(s) · {Object.keys(session.preferences || {}).length} réponse(s)</p>
+                        <div className="participant-list" aria-label="Participants">
+                            {session.participants.map((participant) => (
+                                <span key={participant.id} className={hasVoted(participant) ? 'participant is-ready' : 'participant'}>
+                                    {participant.nickname}{hasVoted(participant) ? ' ✓' : ''}
+                                </span>
+                            ))}
+                        </div>
                         {session.status !== 'collecting' ? (
                             <>
                                 <p className="group-status">
@@ -210,7 +222,9 @@ export default function GroupSession() {
                                 {session.result && (
                                     <div className="group-result">
                                         <span>DECISION FINALE</span>
-                                        <strong>{session.result.restaurantName || session.result.restaurantId}</strong>
+                                        <a href={`/restaurant/${session.result.restaurantId}`} className="group-result-link">
+                                            {session.result.restaurantName || session.result.restaurantId}
+                                        </a>
                                         {session.result.restaurant?.address && <p>{session.result.restaurant.address}</p>}
                                         <p>Choix effectué avec le mode {session.result.mode}.</p>
                                     </div>
@@ -258,7 +272,9 @@ export default function GroupSession() {
                                 {(result || session.result) && (
                                     <div className="group-result">
                                         <span>DECISION FINALE</span>
-                                        <strong>{(result || session.result).restaurantName || (result || session.result).restaurantId}</strong>
+                                        <a href={`/restaurant/${(result || session.result).restaurantId}`} className="group-result-link">
+                                            {(result || session.result).restaurantName || (result || session.result).restaurantId}
+                                        </a>
                                         {(result || session.result).restaurant?.address && <p>{(result || session.result).restaurant.address}</p>}
                                         <p>Choix effectué avec le mode {(result || session.result).mode}.</p>
                                     </div>

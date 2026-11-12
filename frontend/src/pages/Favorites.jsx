@@ -16,14 +16,24 @@ export default function Favorites({ favorites, onToggleFavorite }) {
 
         async function fetchRestaurants() {
             try {
-                const response = await fetch('/api/restaurants');
-
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des favoris.');
+                if (favorites.length === 0) {
+                    setRestaurants([]);
+                    return;
                 }
 
-                const payload = await response.json();
-                setRestaurants(payload.restaurants ?? payload);
+                const responses = await Promise.all(
+                    favorites.map(async (favoriteId) => {
+                        const response = await fetch(`/api/restaurants/${favoriteId}`);
+                        if (response.status === 404) {
+                            return null;
+                        }
+                        if (!response.ok) {
+                            throw new Error('Erreur lors du chargement des favoris.');
+                        }
+                        return response.json();
+                    })
+                );
+                setRestaurants(responses.filter(Boolean));
 
             } catch (error) {
                 setError(error.message);
@@ -35,11 +45,9 @@ export default function Favorites({ favorites, onToggleFavorite }) {
 
         fetchRestaurants();
 
-    }, []);
+    }, [favorites]);
 
-    const favoriteRestaurants = restaurants.filter((restaurant) =>
-        favorites.includes(restaurant.id)
-    );
+    const favoriteRestaurants = restaurants.filter((restaurant) => favorites.includes(restaurant.id));
 
     return (
         <div className="favorites-page">

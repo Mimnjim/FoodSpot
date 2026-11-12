@@ -38,13 +38,14 @@ par ville si aucune instance distante ne répond.
 ## Fonctionnalités
 
 - Recherche par ville, nom et catégorie.
-- Fiches restaurants et favoris locaux.
+- Fiches restaurants et favoris locaux ou OpenStreetMap.
 - Attribution `© OpenStreetMap contributors`.
 - Sessions de groupe avec code de partage.
 - Participants, préférences, recommandations, votes et décision automatique ou
   roulette. Le créateur est le seul à pouvoir finaliser la décision ; son rôle
   est transféré au premier participant restant s'il quitte la session.
 - Expiration des sessions après 24 heures.
+- Progression visible des participants et résultat final ouvrant la fiche choisie.
 
 ## Validation
 

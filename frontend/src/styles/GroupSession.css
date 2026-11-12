@@ -83,6 +83,27 @@
 .group-sync,
 .group-status { color: var(--secondary); }
 
+.participant-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: 1.25rem 0;
+}
+
+.participant {
+    padding: .4rem .7rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--secondary);
+    font-size: .82rem;
+}
+
+.participant.is-ready {
+    border-color: #9ac9ac;
+    color: #26734d;
+    background: #f0faf3;
+}
+
 .group-form button:disabled,
 .group-panel > button:disabled,
 .recommendations button:disabled {
@@ -110,4 +131,10 @@
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .12em;
+}
+
+.group-result-link {
+    color: var(--text);
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
 }

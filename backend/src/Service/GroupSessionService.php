@@ -155,6 +155,9 @@ final class GroupSessionService
         if (!preg_match('/^(local|osm)-[A-Za-z0-9]+$/', $restaurantId)) {
             throw new RuntimeException('Restaurant invalide.');
         }
+        if ($this->searchService->findById($restaurantId) === null) {
+            throw new RuntimeException('Restaurant introuvable.');
+        }
         $votes = $session->getVotes();
         $votes[$participantId] = $restaurantId;
         $session->setVotes($votes);
