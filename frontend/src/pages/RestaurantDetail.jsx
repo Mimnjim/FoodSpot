@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
+import { getRestaurant } from '../api/foodSpotApi.js';
 
 import '../styles/RestaurantDetail.css';
 
@@ -16,22 +17,13 @@ export default function RestaurantDetail() {
 
         async function fetchRestaurant() {
             try {
-                const response = await fetch(`/api/restaurants/${id}`);
+                setRestaurant(await getRestaurant(id));
 
-                if (response.status === 404) {
+            } catch (error) {
+                if (error.status === 404) {
                     setRestaurant(null);
                     return;
                 }
-
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement du restaurant.');
-                }
-
-                const data = await response.json();
-
-                setRestaurant(data);
-
-            } catch (error) {
                 setError(error.message);
 
             } finally {
@@ -105,6 +97,9 @@ export default function RestaurantDetail() {
                         <div className="detail-meta">
                             {restaurant.rating !== null && <span>★ {restaurant.rating}</span>}
                             {restaurant.priceRange && <span>{restaurant.priceRange}</span>}
+                            {restaurant.provider === 'openstreetmap' && (
+                                <span>OpenStreetMap</span>
+                            )}
                         </div>
 
                         <div className="detail-divider" />

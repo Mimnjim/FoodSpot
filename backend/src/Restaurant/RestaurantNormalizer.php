@@ -8,13 +8,18 @@ final class RestaurantNormalizer
      * @param array<string, mixed> $element
      * @return array<string, mixed>
      */
-    public function normalize(array $element): array
+    public function normalize(array $element, ?string $searchCity = null): array
     {
         $tags = is_array($element['tags'] ?? null) ? $element['tags'] : [];
-        $coordinates = [
-            'latitude' => isset($element['lat']) ? (float) $element['lat'] : (float) ($element['center']['lat'] ?? 0),
-            'longitude' => isset($element['lon']) ? (float) $element['lon'] : (float) ($element['center']['lon'] ?? 0),
-        ];
+        $latitude = isset($element['lat'])
+            ? (float) $element['lat']
+            : (isset($element['center']['lat']) ? (float) $element['center']['lat'] : null);
+        $longitude = isset($element['lon'])
+            ? (float) $element['lon']
+            : (isset($element['center']['lon']) ? (float) $element['center']['lon'] : null);
+        $coordinates = $latitude !== null && $longitude !== null
+            ? ['latitude' => $latitude, 'longitude' => $longitude]
+            : null;
 
         $street = $tags['addr:street'] ?? null;
         $houseNumber = $tags['addr:housenumber'] ?? null;
@@ -35,7 +40,7 @@ final class RestaurantNormalizer
             'providerId' => (string) ($element['id'] ?? ''),
             'name' => $tags['name'] ?? 'Restaurant sans nom',
             'address' => $address !== '' ? $address : null,
-            'city' => $tags['addr:city'] ?? null,
+            'city' => $tags['addr:city'] ?? (trim((string) $searchCity) !== '' ? trim((string) $searchCity) : null),
             'location' => $coordinates,
             'category' => $tags['cuisine'] ?? 'Restaurant',
             'rating' => null,

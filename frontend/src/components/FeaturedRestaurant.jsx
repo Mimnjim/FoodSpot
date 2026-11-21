@@ -33,12 +33,15 @@ export default function FeaturedRestaurant({ restaurant }) {
                     </span>
 
                     <span>
-                        {restaurant.city}
+                        {restaurant.city || 'Ville non renseignée'}
                     </span>
 
                     <span>
                         {restaurant.rating !== null ? `★ ${restaurant.rating}` : 'Note non renseignée'}
                     </span>
+                    {restaurant.provider === 'openstreetmap' && (
+                        <span>OpenStreetMap</span>
+                    )}
                 </div>
 
                 <Link to={`/restaurant/${restaurant.id}`} className="featured-button">

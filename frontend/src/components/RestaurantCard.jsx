@@ -29,11 +29,17 @@ export default function RestaurantCard({
 
                         <h3>{restaurant.name}</h3>
                         <p>{restaurant.city || 'Ville non renseignée'}</p>
+                        {restaurant.address && (
+                            <p className="restaurant-card-address">{restaurant.address}</p>
+                        )}
                     </div>
 
                     <div className="restaurant-card-meta">
                         {restaurant.rating !== null ? <span>★ {restaurant.rating}</span> : <span>Note non renseignée</span>}
                         {restaurant.priceRange ? <span>{restaurant.priceRange}</span> : <span>Prix non renseigné</span>}
+                        {restaurant.provider === 'openstreetmap' && (
+                            <span className="restaurant-source">OpenStreetMap</span>
+                        )}
                     </div>
                 </div>
             </Link>

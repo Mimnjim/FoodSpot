@@ -3,11 +3,19 @@
 namespace App\Restaurant;
 
 use RuntimeException;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 final class OverpassRestaurantProvider implements RestaurantProviderInterface
 {
+    private const MAX_RESULTS = 20;
+    private const CACHE_SECONDS = 3600;
+    private const HTTP_TIMEOUT = 2;
+
     private const ENDPOINTS = [
         'https://overpass-api.de/api/interpreter',
         'https://overpass.kumi.systems/api/interpreter',
@@ -17,6 +25,7 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
     public function __construct(
         private readonly RestaurantNormalizer $normalizer,
         private readonly CacheInterface $cache,
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -28,16 +37,18 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
         }
 
         $query = $this->buildQuery($city, $category, $search);
-        $cacheKey = 'overpass_' . hash('sha256', $query);
+        $cacheKey = 'overpass_v3_' . hash('sha256', $query);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($query): array {
-            $item->expiresAfter(300);
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($query, $city): array {
+            $item->expiresAfter(self::CACHE_SECONDS);
             $payload = $this->request($query);
 
-            return array_map(
-                fn (array $element): array => $this->normalizer->normalize($element),
+            $results = array_map(
+                fn (array $element): array => $this->normalizer->normalize($element, $city),
                 $payload['elements'],
             );
+
+            return array_slice($results, 0, self::MAX_RESULTS);
         });
     }
 
@@ -48,8 +59,8 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
         }
 
         $query = '[out:json][timeout:12];nwr(' . $providerId . ');out center tags;';
-        $payload = $this->cache->get('overpass_id_' . $providerId, function (ItemInterface $item) use ($query): array {
-            $item->expiresAfter(300);
+        $payload = $this->cache->get('overpass_v3_id_' . $providerId, function (ItemInterface $item) use ($query): array {
+            $item->expiresAfter(self::CACHE_SECONDS);
             $decoded = $this->request($query);
             return is_array($decoded['elements'] ?? null) ? $decoded['elements'] : [];
         });
@@ -64,14 +75,27 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
         $area = 'area["name"="' . $this->escape($city) . '"]["boundary"="administrative"]->.searchArea;';
         $filters = '["amenity"="restaurant"]';
         if ($category !== null && $category !== '' && $category !== 'Toutes') {
-            $filters .= '["cuisine"~"' . $this->escape($category) . '",i]';
+            $filters .= '["cuisine"~"' . $this->escape($this->cuisinePattern($category)) . '",i]';
         }
         if ($search !== null && trim($search) !== '') {
             $filters .= '["name"~"' . $this->escape(trim($search)) . '",i]';
         }
 
-        return '[out:json][timeout:12];' . $area
-            . '(nwr' . $filters . '(area.searchArea););out center tags;';
+        return '[out:json][timeout:3];' . $area
+            . '(nwr' . $filters . '(area.searchArea););out 20 center tags;';
+    }
+
+    private function cuisinePattern(string $category): string
+    {
+        $normalized = mb_strtolower(trim($category), 'UTF-8');
+
+        return match ($normalized) {
+            'asiatique', 'asian', 'asia' => 'asian|chinese|japanese|korean|thai|vietnamese|indian|asian',
+            'japonais', 'japanese' => 'japanese|sushi',
+            'italien', 'italian' => 'italian|pizza',
+            'français', 'francais', 'french' => 'french',
+            default => $normalized,
+        };
     }
 
     private function escape(string $value): string
@@ -82,46 +106,37 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
     /** @return array<string, mixed> */
     private function request(string $query): array
     {
+        $lastStatus = null;
+
         foreach (self::ENDPOINTS as $endpoint) {
-            $context = stream_context_create([
-                'http' => [
-                    'method' => 'POST',
-                    'header' => "Content-Type: application/x-www-form-urlencoded\r\nUser-Agent: FoodSpot/1.0\r\n",
-                    'content' => http_build_query(['data' => $query]),
-                    'timeout' => 15,
-                    'ignore_errors' => true,
-                ],
-            ]);
-            $response = @file_get_contents($endpoint, false, $context);
-            $status = $this->responseStatus($http_response_header ?? []);
-
-            if ($response === false || $status >= 400) {
-                continue;
-            }
-
             try {
-                $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-            } catch (\JsonException) {
+                $response = $this->httpClient->request('POST', $endpoint, [
+                    'headers' => ['User-Agent' => 'FoodSpot/1.0'],
+                    'body' => ['data' => $query],
+                    'timeout' => self::HTTP_TIMEOUT,
+                    'max_redirects' => 2,
+                ]);
+                $lastStatus = $response->getStatusCode();
+                if ($lastStatus < 400) {
+                    $payload = $response->toArray();
+                    if (is_array($payload) && is_array($payload['elements'] ?? null)) {
+                        return $payload;
+                    }
+                }
+            } catch (HttpExceptionInterface $exception) {
+                $lastStatus = (int) $exception->getCode();
+            } catch (TransportExceptionInterface|DecodingExceptionInterface) {
                 continue;
             }
+        }
 
-            if (is_array($payload) && is_array($payload['elements'] ?? null)) {
-                return $payload;
-            }
+        if ($lastStatus === 429) {
+            throw new RuntimeException('OpenStreetMap limite temporairement les recherches. Veuillez réessayer dans quelques instants.');
+        }
+        if ($lastStatus === 504) {
+            throw new RuntimeException('Le service OpenStreetMap a dépassé son délai de réponse. Veuillez réessayer.');
         }
 
         throw new RuntimeException('Le service OpenStreetMap est momentanément indisponible.');
-    }
-
-    /** @param list<string> $headers */
-    private function responseStatus(array $headers): int
-    {
-        foreach ($headers as $header) {
-            if (preg_match('/HTTP\/\S+ (\d{3})/', $header, $matches)) {
-                return (int) $matches[1];
-            }
-        }
-
-        return 0;
     }
 }

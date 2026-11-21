@@ -77,6 +77,102 @@
     font-size: 0.95rem;
 }
 
+.discover-section > .results-summary {
+    padding: 0 0 1.25rem;
+    color: var(--secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.city-onboarding {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+    background: rgba(23, 23, 23, 0.58);
+    backdrop-filter: blur(8px);
+}
+
+.city-onboarding-card {
+    width: min(520px, 100%);
+    padding: clamp(2rem, 6vw, 3.5rem);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--background);
+    box-shadow: 0 24px 80px rgba(23, 23, 23, 0.24);
+}
+
+.city-onboarding-eyebrow {
+    color: var(--accent);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+}
+
+.city-onboarding-card h1 {
+    margin-top: 0.85rem;
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 8vw, 4.25rem);
+    font-weight: 400;
+    line-height: 0.98;
+}
+
+.city-onboarding-card > p {
+    margin-top: 1.25rem;
+    color: var(--secondary);
+}
+
+.city-onboarding-card > input {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.city-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.city-suggestions button {
+    padding: 0.55rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--secondary);
+    cursor: pointer;
+}
+
+.city-suggestions button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.city-onboarding-submit {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--white);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.city-onboarding-submit:hover {
+    background: var(--accent);
+}
+
 
 /* =========================
    RESPONSIVE

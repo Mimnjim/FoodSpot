@@ -28,17 +28,29 @@ npm install
 npm run dev
 ```
 
-Le proxy Vite redirige `/api` vers `http://127.0.0.1:8000`. Une recherche sans
-ville utilise les fixtures SQLite locales ; une recherche avec une ville utilise
-Overpass. Les instances publiques Overpass peuvent être temporairement indisponibles ou
-limiter les requêtes. FoodSpot met en cache les recherches pendant cinq minutes,
-essaie plusieurs instances de secours et utilise les restaurants locaux filtrés
-par ville si aucune instance distante ne répond.
+Le proxy Vite redirige `/api` vers `http://127.0.0.1:8000`. La ville choisie à
+la première visite est mémorisée dans le navigateur et les recherches utilisent
+Overpass. Les instances publiques peuvent être temporairement indisponibles ou
+limiter les requêtes : FoodSpot cache les recherches une heure, tente plusieurs
+instances avec un timeout réseau court et utilise les restaurants locaux filtrés
+par ville si aucun service distant ne répond. Les résultats Overpass sont limités
+à 20 établissements par recherche.
+
+## Architecture API frontend
+
+Tous les appels HTTP vers Symfony passent par
+`frontend/src/api/foodSpotApi.js`. Ce module centralise la sérialisation des
+critères de recherche, les en-têtes JSON, la lecture des réponses et les erreurs
+HTTP. Les pages React ne communiquent donc jamais directement avec OpenStreetMap
+ou Overpass.
 
 ## Fonctionnalités
 
 - Recherche par ville, nom et catégorie.
 - Fiches restaurants et favoris locaux ou OpenStreetMap.
+- Résultats réels mis en avant avec adresse, source et valeurs manquantes
+  clairement identifiées.
+- Première visite avec choix obligatoire de la ville, mémorisé dans le navigateur.
 - Attribution `© OpenStreetMap contributors`.
 - Sessions de groupe avec code de partage.
 - Participants, préférences, recommandations, votes et décision automatique ou
@@ -53,8 +65,10 @@ par ville si aucune instance distante ne répond.
 cd frontend
 npm run lint
 npm run build
+npm run test
 
 cd ..\backend
+php bin/phpunit
 php bin/console doctrine:schema:validate --no-interaction
 php bin/console lint:container --no-interaction
 php bin/console doctrine:migrations:up-to-date --no-interaction

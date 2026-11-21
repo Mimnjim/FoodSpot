@@ -24,9 +24,18 @@ class RestaurantRepository extends ServiceEntityRepository
 
         // Filtrer par catégorie si une catégorie est sélectionnée
         if ($category !== null && $category !== '' && $category !== 'Toutes') {
-            $queryBuilder
-                ->andWhere('r.category = :category')
-                ->setParameter('category', $category);
+            $categoryValues = mb_strtolower(trim($category), 'UTF-8') === 'asiatique'
+                ? ['Japonais', 'Chinois', 'Coréen', 'Thaïlandais', 'Vietnamien', 'Indien']
+                : [$category];
+
+            $categoryConditions = $queryBuilder->expr()->orX();
+            foreach ($categoryValues as $index => $categoryValue) {
+                $categoryConditions->add(
+                    $queryBuilder->expr()->like('LOWER(r.category)', ':category' . $index)
+                );
+                $queryBuilder->setParameter('category' . $index, '%' . mb_strtolower($categoryValue, 'UTF-8') . '%');
+            }
+            $queryBuilder->andWhere($categoryConditions);
         }   
 
         // Rechercher dans le nom, la catégorie ou la ville

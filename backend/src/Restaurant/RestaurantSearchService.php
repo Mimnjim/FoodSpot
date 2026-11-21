@@ -4,12 +4,15 @@ namespace App\Restaurant;
 
 use App\Repository\RestaurantRepository;
 use RuntimeException;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 final class RestaurantSearchService
 {
     public function __construct(
         private readonly RestaurantProviderInterface $overpassProvider,
         private readonly RestaurantRepository $localRepository,
+        private readonly CacheInterface $cache,
     ) {
     }
 
@@ -18,7 +21,22 @@ final class RestaurantSearchService
      */
     public function search(?string $city, ?string $category, ?string $search): array
     {
-        if (trim((string) $city) !== '') {
+        $cacheKey = 'restaurant_search_v1_' . hash('sha256', implode('|', [
+            trim((string) $city),
+            trim((string) $category),
+            trim((string) $search),
+        ]));
+
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($city, $category, $search): array {
+            $item->expiresAfter(3600);
+            return $this->searchUncached($city, $category, $search);
+        });
+    }
+
+    private function searchUncached(?string $city, ?string $category, ?string $search): array
+    {
+        $city = trim((string) $city);
+        if ($city !== '') {
             try {
                 return $this->overpassProvider->search($city, $category, $search);
             } catch (RuntimeException $exception) {

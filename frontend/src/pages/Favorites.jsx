@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import Header from '../components/Header.jsx';
 import RestaurantList from '../components/RestaurantList.jsx';
 import Footer from '../components/Footer.jsx';
+import { getRestaurant } from '../api/foodSpotApi.js';
 
 import '../styles/Favorites.css';
 
@@ -23,14 +24,14 @@ export default function Favorites({ favorites, onToggleFavorite }) {
 
                 const responses = await Promise.all(
                     favorites.map(async (favoriteId) => {
-                        const response = await fetch(`/api/restaurants/${favoriteId}`);
-                        if (response.status === 404) {
-                            return null;
+                        try {
+                            return await getRestaurant(favoriteId);
+                        } catch (error) {
+                            if (error.status === 404) {
+                                return null;
+                            }
+                            throw error;
                         }
-                        if (!response.ok) {
-                            throw new Error('Erreur lors du chargement des favoris.');
-                        }
-                        return response.json();
                     })
                 );
                 setRestaurants(responses.filter(Boolean));

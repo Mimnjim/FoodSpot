@@ -107,6 +107,15 @@
     font-weight: 600;
 }
 
+.restaurant-card-address {
+    max-width: 260px;
+}
+
+.restaurant-card-meta .restaurant-source {
+    color: var(--accent);
+    font-size: 0.68rem;
+}
+
 @media (max-width: 600px) {
 
     .restaurant-card-image {

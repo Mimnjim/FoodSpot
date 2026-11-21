@@ -1,222 +1,216 @@
-# FoodSpot — rapport d'audit, phase 0
+# FoodSpot — rapport d'audit actualise, phase 0
 
-Date de l'audit : 12 novembre 2026
+Date de l'audit : 21 novembre 2026
 
-## 1. Synthèse
+## 1. Synthese
 
-FoodSpot est un prototype fonctionnel de découverte de restaurants basé sur une
-API Symfony et un frontend React/Vite. Le parcours individuel principal existe :
-liste, recherche textuelle, filtre par catégorie, détail et favoris locaux.
+Le depot est deja nettement plus avance que le prototype décrit dans le
+premier audit. L'application comprend maintenant une recherche via
+OpenStreetMap/Overpass, un parcours individuel avec favoris locaux, des
+sessions de groupe, des participants, des preferences, des recommandations,
+des votes et une decision finale.
 
-Le projet n'implémente pas encore le cahier des charges cible. Le catalogue
-provient exclusivement de huit entités SQLite créées par fixtures, sans
-OpenStreetMap/Overpass, sans cache externe et sans fonctionnalités de groupe.
-La phase 1 devra donc préparer une migration progressive vers une architecture
-de fournisseurs externes, sans supprimer prématurément le fonctionnement
-actuel.
+Le repository est propre avant toute modification. Les migrations sont toutes
+executees et a jour. Le frontend produit un build valide. Les validations
+Symfony des routes, du conteneur, du mapping Doctrine et du schema passent.
 
-## 2. État des lieux du frontend
-
-### Organisation
-
-- React 19, Vite 8, React Router 8 et JavaScript sont déclarés dans
-  [`frontend/package.json`](frontend/package.json).
-- Le point d'entrée est [`frontend/src/main.jsx`](frontend/src/main.jsx).
-- [`frontend/src/App.jsx`](frontend/src/App.jsx) monte le routeur, conserve les
-  favoris dans `localStorage` sous `foodspot-favorites` et déclare les routes
-  `/`, `/restaurant/:id` et `/favorites`.
-- Les composants sont correctement séparés entre structure (`Header`, `Footer`,
-  `Hero`), recherche (`SearchBar`, `CategoryFilter`), liste
-  (`RestaurantList`, `RestaurantCard`) et mise en avant
-  (`FeaturedRestaurant`).
-- Les styles sont organisés par composant sous
-  [`frontend/src/styles/`](frontend/src/styles/), avec une direction visuelle
-  déjà cohérente (fond chaud, accent orange, typographies DM Serif/Manrope).
-
-### Fonctionnement constaté
-
-- [`frontend/src/pages/Home.jsx`](frontend/src/pages/Home.jsx) charge
-  `/api/restaurants`, puis relance une requête filtrée après chaque recherche ou
-  changement de catégorie.
-- La saisie est temporisée de 400 ms et les requêtes de filtrage précédentes
-  sont annulées avec `AbortController`.
-- [`frontend/src/pages/RestaurantDetail.jsx`](frontend/src/pages/RestaurantDetail.jsx)
-  charge le détail depuis Symfony.
-- [`frontend/src/pages/Favorites.jsx`](frontend/src/pages/Favorites.jsx) filtre
-  localement le catalogue chargé depuis l'API.
-- [`frontend/src/data/restaurants.js`](frontend/src/data/restaurants.js) est un
-  ancien catalogue statique qui n'est référencé par aucun composant actuel.
-- [`frontend/src/pages/Restaurants.jsx`](frontend/src/pages/Restaurants.jsx)
-  est vide et n'est pas routée.
-
-### Points à conserver
-
-- Le découpage des composants et les états de chargement/erreur.
-- Le debounce et l'annulation des requêtes.
-- Le stockage local des favoris pour le MVP individuel.
-- Le proxy Vite `/api` vers `http://127.0.0.1:8000` dans
-  [`frontend/vite.config.js`](frontend/vite.config.js).
-- La direction artistique et les styles existants, à adapter plutôt qu'à
-  réécrire.
-
-### Limites frontend
-
-- Le premier chargement effectue deux appels API : un appel général et un appel
-  filtré initial, alors qu'un seul devrait suffire.
-- L'état `filteredRestaurants` commence vide et dépend du second appel.
-- Le modèle UI exige `image`, `rating`, `priceRange` et `description`, alors que
-  ces informations sont souvent absentes d'OpenStreetMap.
-- Les images référencées par les fixtures (`/images/*.jpg`) ne sont pas
-  présentes dans `frontend/public/`.
-- Plusieurs libellés restent en anglais, les liens `About` et `+ Add a
-  restaurant` ne déclenchent aucune fonctionnalité, et `FeaturedRestaurant`
-  affiche un bouton sans navigation.
-- Aucun écran, composant ou route ne couvre les sessions de groupe, les
-  invitations, les préférences, le vote ou les recommandations collectives.
-
-## 3. État des lieux du backend
+## 2. Etat du frontend
 
 ### Organisation
 
-- Symfony 7.4.22, PHP 8.3.6, Doctrine ORM 3.7 et SQLite sont configurés dans
-  [`backend/composer.json`](backend/composer.json).
-- Les contrôleurs à attributs sont importés par
-  [`backend/config/routes.yaml`](backend/config/routes.yaml).
-- Le service générique de [`backend/config/services.yaml`](backend/config/services.yaml)
-  autowire et autoconfigure automatiquement les classes de `src/`.
-- [`backend/src/Controller/HelloController.php`](backend/src/Controller/HelloController.php)
-  expose l'endpoint de démonstration `/api/hello`.
-- [`backend/src/Controller/RestaurantController.php`](backend/src/Controller/RestaurantController.php)
-  expose `/api/restaurants` et `/api/restaurants/{id}`.
-- [`backend/src/Repository/RestaurantRepository.php`](backend/src/Repository/RestaurantRepository.php)
-  réalise le filtre Doctrine par catégorie et recherche sur nom, catégorie ou
-  ville.
-- [`backend/src/Entity/Restaurant.php`](backend/src/Entity/Restaurant.php)
-  représente le catalogue persistant.
-- [`backend/src/DataFixtures/RestaurantFixtures.php`](backend/src/DataFixtures/RestaurantFixtures.php)
-  insère huit restaurants fictifs.
+- React 19, Vite 8, React Router 8 et JavaScript sont utilises dans
+  `frontend/package.json`.
+- `frontend/src/main.jsx` initialise l'application.
+- `frontend/src/App.jsx` declare les routes `/`, `/restaurant/:id`,
+  `/favorites`, `/group`, `/group/:code` et `/about`.
+- Les composants sont separes entre navigation, recherche, cartes, details,
+  favoris et sessions de groupe.
+- Les styles restent organises sous `frontend/src/styles/`.
 
-### Base et migrations
+### Parcours disponibles
 
-- [`backend/migrations/Version20261105151720.php`](backend/migrations/Version20261105151720.php)
-  crée uniquement la table `restaurant`.
-- La migration est exécutée et à jour dans l'environnement `dev`.
-- La base `backend/var/data_dev.db` contient huit restaurants.
-- Les tables nécessaires aux sessions de groupe, participants, préférences,
-  votes, résultats et favoris persistants n'existent pas.
-- Le modèle actuel rend obligatoires `rating`, `price_range`, `description` et
-  `image`, ce qui est incompatible avec des données OSM partielles.
+- La page d'accueil charge les restaurants locaux ou Overpass via le backend.
+- La recherche utilise un debounce de 400 ms pour la saisie textuelle.
+- Le filtrage precedent est annule avec `AbortController`.
+- La fiche restaurant charge les donnees normalisees depuis Symfony.
+- Les favoris sont conserves dans `localStorage` sous
+  `foodspot-favorites`.
+- La page de groupe permet la creation, la jointure, les preferences, les
+  recommandations, les votes et la decision.
+- Le pied de page affiche l'attribution OpenStreetMap obligatoire.
 
-### Vérifications effectuées
+### Elements a conserver
 
-- `php bin/console debug:router` confirme les routes :
-  `/api/hello`, `/api/restaurants` et `/api/restaurants/{id}`.
-- `GET /api/restaurants` répond `200` et renvoie huit éléments.
-- `GET /api/restaurants?search=Paris` répond `200` et renvoie quatre éléments.
-- `GET /api/restaurants?category=Japonais` répond `200` et renvoie un élément.
-- `php bin/console doctrine:migrations:status` confirme une migration exécutée
-  et aucune migration en attente.
+- Le routage React Router et la separation des pages/composants.
+- Le debounce et l'annulation des requetes.
+- Le stockage local des favoris tant qu'aucun compte utilisateur n'est requis.
+- La proxyfication Vite `/api` vers Symfony.
+- La direction artistique chaude et orange deja presente.
+- Les etats de chargement, d'erreur et de liste vide.
 
-## 4. Fonctionnalités et état
+### Limites du frontend
 
-| Fonctionnalité | État actuel | Évaluation |
+- Il n'y a pas de tests automatises frontend ni de script de test dans
+  `frontend/package.json`.
+- La gestion du chargement initial peut encore etre centralisee davantage.
+- Les informations OSM absentes doivent continuer a rester optionnelles dans
+  tous les affichages.
+- Le parcours de groupe doit etre teste reellement avec plusieurs navigateurs
+  ou participants.
+
+## 3. Etat du backend
+
+### Architecture actuelle
+
+- Symfony 7.4, PHP, Doctrine ORM 3.7 et SQLite sont utilises.
+- `RestaurantController` expose la recherche et le detail via
+  `/api/restaurants`.
+- `GroupSessionController` expose les routes de session de groupe.
+- `RestaurantSearchService` orchestre le provider Overpass et le catalogue local
+  de secours.
+- `OverpassRestaurantProvider` interroge plusieurs instances publiques
+  Overpass avec timeout et gestion des reponses invalides.
+- `RestaurantNormalizer` transforme les elements OSM en schema FoodSpot.
+- `RestaurantProviderInterface` definit le contrat externe.
+- `GroupSessionService` gere le cycle de vie, les preferences, les scores, les
+  votes, le transfert du role de createur et la decision.
+
+### Recherche et donnees
+
+- Une recherche avec ville utilise Overpass.
+- Une recherche sans ville utilise les fixtures SQLite locales.
+- Les recherches Overpass sont mises en cache cinq minutes.
+- Trois instances Overpass sont essayees successivement.
+- Si elles sont indisponibles, les donnees locales correspondant a la ville,
+  lorsque presentes, servent de secours.
+- Le normalizer renvoie explicitement des valeurs nulles pour les champs OSM
+  absents.
+- Les identifiants distinguent `osm-*` et `local-*`.
+- Les champs inventes comme note, prix ou image ne sont pas fabriques pour les
+  resultats OSM.
+
+### Entites et migrations
+
+- `Restaurant` conserve le catalogue local de demonstration.
+- `GroupSession` conserve les participants, preferences, votes et resultat
+  sous forme de donnees JSON SQLite.
+- Six migrations sont disponibles et executees.
+- Le schema Doctrine est synchronise avec les mappings.
+- La base locale reste dans `backend/var/`, qui est ignoree par Git.
+
+## 4. Fonctionnalites existantes
+
+| Fonctionnalite | Etat | Evaluation |
 |---|---|---|
-| Afficher un catalogue | Fonctionnelle | Données locales de démonstration uniquement |
-| Recherche nom/catégorie/ville | Fonctionnelle | Requête Doctrine, sans pagination ni source externe |
-| Filtre catégorie | Fonctionnelle | Dépend des catégories du catalogue local |
-| Fiche restaurant | Fonctionnelle | Schéma et identifiant locaux |
-| Favoris | Partielle mais utilisable | `localStorage`, pas de persistance backend |
-| Images, notes, prix, descriptions | Démonstration | Valeurs inventées par fixtures et images absentes |
-| OpenStreetMap / Overpass | Absente | Aucun client, provider, normalizer ou attribution |
-| Cache et limitation externe | Absente | Aucun cache applicatif dédié ni gestion 429/504/timeout |
-| Sessions de groupe | Absente | Aucun modèle, endpoint ou écran |
-| Participants/invitations | Absente | Aucun modèle ou endpoint |
-| Préférences/recommandations/votes | Absente | Aucun modèle, service ou écran |
-| Tests automatisés | Absents | Aucun `backend/tests` trouvé et aucun script de test frontend |
-| Build frontend | Validé | `npm.cmd run lint` et `npm.cmd run build` passent |
+| Catalogue individuel | Implementee | Local sans ville, Overpass avec ville |
+| Recherche nom/categorie/ville | Implementee | Backend Symfony |
+| Fiche restaurant | Implementee | Champs normalises |
+| Favoris | Implementee | Persistance locale navigateur |
+| Source Overpass | Implementee | Multi-instance, cache cinq minutes, fallback local |
+| Attribution OSM | Implementee | Affichee dans le footer |
+| Sessions de groupe | Implementee | Code de partage et expiration 24 heures |
+| Participants | Implementee | Ajout, retrait et transfert du createur |
+| Preferences | Implementee | Validation backend |
+| Recommandations | Implementee | Scores derives des preferences |
+| Votes | Implementee | Un vote par participant |
+| Decision | Implementee | Vote majoritaire ou roulette |
+| Tests automatises | Incomplet | Aucun test backend ou frontend trouve |
+| Page historique | Absente | Hors MVP |
 
-## 5. Éléments obsolètes ou à clarifier
+## 5. Elements a conserver
 
-- Retirer ou remplacer progressivement
-  [`frontend/src/data/restaurants.js`](frontend/src/data/restaurants.js) après
-  confirmation qu'aucun usage futur n'est souhaité.
-- Supprimer ou transformer `HelloController` une fois l'API réellement
-  structurée ; ne pas le faire pendant la phase d'audit.
-- Décider si la route/page `Restaurants.jsx` doit devenir la page de résultats
-  ou rester supprimée.
-- Les fixtures doivent rester disponibles pour les tests et le développement,
-  mais ne doivent plus être la source de production après intégration du
-  provider OSM.
+- La separation entre `RestaurantSearchService`, provider Overpass, normalizer
+  et catalogue local.
+- Le schema normalise avec identifiant stable `provider + providerId`.
+- Les fixtures locales comme donnees de development et fallback.
+- Les valeurs optionnelles pour les informations manquantes.
+- Les favoris dans `localStorage`.
+- Les migrations et l'architecture Doctrine existantes.
+- L'expiration des sessions apres 24 heures.
+- Le footer indiquant `© OpenStreetMap contributors`.
 
-## 6. Adaptation recommandée pour OpenStreetMap/Overpass
+## 6. Elements a adapter
 
-1. Introduire un contrat `RestaurantProviderInterface` et un provider
-   `OverpassRestaurantProvider` isolant les appels HTTP, les timeouts, les
-   réponses invalides et les erreurs 429/504.
-2. Ajouter un normalizer vers un DTO ou tableau FoodSpot stable contenant au
-   minimum `provider`, `providerId`, `name`, `address`, `city`, `location`,
-   `category`, `website`, `phone` et `openingHours`, avec des valeurs nulles
-   explicites pour les données absentes.
-3. Ajouter un `RestaurantSearchService` côté Symfony pour la validation des
-   critères, la limitation des résultats, le cache et l'orchestration du
-   provider.
-4. Faire évoluer `RestaurantController` pour consommer ce service, sans faire
-   appeler Overpass directement par React.
-5. Adapter le frontend aux champs optionnels et supprimer l'affichage de
-   notes, prix ou images inventés. Ajouter l'attribution
-   « © OpenStreetMap contributors ».
-6. Conserver SQLite pour les données propres à FoodSpot (sessions, participants,
-   préférences, votes, résultats et éventuellement favoris), pas comme
-   catalogue OSM permanent.
-7. Ajouter les migrations et services de groupe seulement après stabilisation
-   du contrat de recherche.
+- Remplacer les donnees locales comme source principale dans les environnements
+  ou voyages necessitant une vraie ville.
+- Ajouter des tests pour la normalisation, le fallback, les endpoints, les
+  sessions et les decisions.
+- Casser les dependances internes inutiles et renforcer les validations API
+  avec des tests et des limites claires.
+- Examiner les risques liee a des donnees JSON dans `GroupSession` :
+  fonctionnalite utile pour un MVP, mais schemas normalises a envisager si les
+  volumes ou les exigences evoluent.
+- Ajouter une gestion HTTP Symfony propre pour les appels externes si le
+  provider reste base sur `file_get_contents`.
+- Completer l'isolation des secrets et des variables d'environnement pour les
+  environnements de deploiement.
 
-## 7. Plan précis pour la phase 1
+## 7. Problemes techniques identifies
 
-### Étape 1 — Stabiliser les contrats
+1. Aucun test automatique n'est present.
+2. `OverpassRestaurantProvider` utilise des flux HTTP natifs plutot qu'un client
+   HTTP Symfony, ce qui rend les erreurs HTTP et les retries moins
+   structurees.
+3. Les resultats Overpass peuvent avoir une ville absente dans `addr:city`,
+   meme lorsque la ville de recherche est connue.
+4. Le provider ne peut pas garantir des informations telles que description,
+   image, note ou prix.
+5. Le catalogue local contient encore des champs demonstration, notamment des
+   valeurs synthetiques de rating, prix et image.
+6. Les sessions stockent plusieurs domaines metier dans des champs JSON au lieu
+   d'entites relationnelles; cela doit etre accepte pour le MVP ou migre avec
+   des tests avant evolution.
 
-- Définir le schéma de réponse FoodSpot et ses champs optionnels.
-- Décider le format d'identifiant (`provider` + `providerId`) afin d'éviter de
-  dépendre de l'auto-incrément SQLite.
-- Définir les limites de recherche et le comportement lorsqu'Overpass est
-  indisponible.
+## 8. Plan precis pour la prochaine phase
 
-### Étape 2 — Préparer le backend
+### Etape 1 — Qualifier le socle actuel
 
-- Créer les namespaces `Provider`, `Service` et éventuellement `Dto`.
-- Extraire la sérialisation des restaurants du contrôleur.
-- Configurer un client HTTP Symfony, un timeout explicite et le cache.
-- Garder temporairement un provider local de secours pour préserver le
-  développement et les tests.
+- Ajouter les tests du normalizer et du provider.
+- Ajouter les tests des endpoints restaurants et groupes.
+- Tester les chemins success, fallback, 503, ville vide et identifiants invalides.
 
-### Étape 3 — Préparer le frontend
+### Etape 2 — Fiabiliser les recherches externes
 
-- Centraliser les appels API dans un module dédié.
-- Éliminer le double chargement initial.
-- Rendre les cartes et le détail compatibles avec les données manquantes.
-- Corriger les liens morts et décider du rôle de `Restaurants.jsx`.
+- Migrer les appels Overpass vers un client HTTP Symfony si cela simplifie
+  timeout, status HTTP, retries et logs.
+- Ajouter une politique explicite de concurrence et de limitation.
+- Ajouter des logs distincts pour 429, 504, timeout et reponse invalide.
+- Conservers les caches courts et le fallback local.
 
-### Étape 4 — Qualité
+### Etape 3 — Stabiliser le contrat API
 
-- Ajouter des tests backend du normalizer, du provider (réponses valides et
-  erreurs) et des endpoints.
-- Ajouter au minimum des tests de comportement pour recherche, détail et
-  favoris.
-- Documenter les commandes de démarrage, la configuration du proxy et
-  l'attribution OSM.
+- Documenter le format complet des resultats.
+- Rendre tous les champs OSM optionnels uniformes.
+- Conserver `osm-*` et `local-*` sans exposer directement les ids SQLite.
+- Eliminer les champs demo de l'affichage principal.
 
-### Étape 5 — Préparer le groupe
+### Etape 4 — Verifier le parcours frontend
 
-- Concevoir les entités et migrations `GroupSession`, `Participant`,
-  `Preference`, `Vote` et `SessionResult`.
-- Définir les endpoints et le calcul de recommandation avant de créer les
-  écrans React.
+- Centraliser les appels API dans un module frontend.
+- Ajouter les tests des recherches, details, favoris et groupe.
+- Re-verifier les parcours principaux sur mobile et navigateur.
+
+### Etape 5 — Preparer la stabilisation finale
+
+- Ajouter les scripts documentés de test backend et frontend.
+- Vérifier les variables d'environnement de developpement.
+- Relancer le build, les validations Doctrine et les routes.
+- Proposer un commit uniquement apres validation complete.
+
+## 9. Verification effectuee
+
+- `git status` : repository propre.
+- `npm.cmd run lint` : passe.
+- `npm.cmd run build` : passe.
+- `php bin/console debug:router` : 11 routes applicatives, dont les 8 routes API.
+- `php bin/console doctrine:migrations:status --no-interaction` : 6 migrations
+  executees, aucune migration en attente.
+- `php bin/console doctrine:schema:validate --no-interaction` : schema synchronise.
+- `php bin/console lint:container --no-interaction` : conteneur valide.
 
 ## Conclusion
 
-Le socle actuel est suffisant pour commencer une adaptation progressive, mais
-il ne faut pas étendre directement l'entité `Restaurant` actuelle pour y
-stocker les données Overpass : cela conserverait des champs obligatoires et un
-couplage au catalogue fictif. La priorité de la phase 1 est donc de séparer la
-source de restaurants du domaine FoodSpot, puis de préserver le parcours
-individuel existant pendant l'introduction d'OpenStreetMap.
+Phase 0 terminee : l'état réel du projet est documenté. Le socle frontend,
+backend, OpenStreetMap, Overpass et groupe existe deja. La prochaine étape
+doit commencer par la qualification automatisée du code present, puis la
+fiabilisation des recherches externes, avant toute nouvelle fonctionnalite.

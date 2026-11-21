@@ -8,23 +8,30 @@ import RestaurantList from '../components/RestaurantList.jsx';
 import FeaturedRestaurant from '../components/FeaturedRestaurant.jsx';
 import Footer from '../components/Footer.jsx';
 import SearchBar from '../components/SearchBar.jsx';
+import { getRestaurants } from '../api/foodSpotApi.js';
 import '../styles/Home.css';
 
 export default function Home({ favorites, onToggleFavorite }) {
 
-    const [restaurants, setRestaurants] = useState([]);
     const [filteredRestaurants, setFilteredRestaurants] = useState([]);
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [isFiltering, setIsFiltering] = useState(false);
     const [error, setError] = useState(null);
 
     const [search, setSearch] = useState('');
-    const [city, setCity] = useState('');
+    const [city, setCity] = useState(() => (
+        localStorage.getItem('foodspot-city')?.trim() || ''
+    ));
     const [selectedCategory, setSelectedCategory] = useState('Toutes');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [debouncedCity, setDebouncedCity] = useState(city);
+    const [onboardingCity, setOnboardingCity] = useState('');
+    const [showCityOnboarding, setShowCityOnboarding] = useState(() => (
+        !localStorage.getItem('foodspot-city')
+    ));
     const hasActiveFilters = debouncedSearch.trim() !== ''
-        || city.trim() !== ''
+        || debouncedCity.trim() !== ''
         || selectedCategory !== 'Toutes';
 
     // Attendre 400 ms après la dernière saisie
@@ -38,34 +45,31 @@ export default function Home({ favorites, onToggleFavorite }) {
         };
     }, [search]);
 
-    // Récupérer tous les restaurants au chargement
     useEffect(() => {
-
-        async function fetchRestaurants() {
-            try {
-                const response = await fetch('/api/restaurants');
-
-                if (!response.ok) {
-                    throw new Error(
-                        'Erreur lors du chargement des restaurants.'
-                    );
-                }
-
-                const payload = await response.json();
-                const data = payload.restaurants ?? payload;
-                setRestaurants(data);
-
-            } catch (error) {
-                setError(error.message);
-
-            } finally {
-                setLoading(false);
+        const timeout = setTimeout(() => {
+            setDebouncedCity(city);
+            if (city.trim()) {
+                localStorage.setItem('foodspot-city', city.trim());
             }
+        }, 600);
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [city]);
+
+    function chooseOnboardingCity(event) {
+        event.preventDefault();
+        const selectedCity = onboardingCity.trim();
+        if (!selectedCity) {
+            return;
         }
 
-        fetchRestaurants();
-
-    }, []);
+        localStorage.setItem('foodspot-city', selectedCity);
+        setCity(selectedCity);
+        setDebouncedCity(selectedCity);
+        setShowCityOnboarding(false);
+    }
 
     // Filtrer les restaurants depuis Symfony uniquement lorsqu'un critère est actif
     useEffect(() => {
@@ -82,36 +86,11 @@ export default function Home({ favorites, onToggleFavorite }) {
             try {
                 setError(null);
 
-                // Construire les paramètres de recherche
-                const params = new URLSearchParams();
-
-                if (selectedCategory !== 'Toutes') {
-                    params.set('category', selectedCategory);
-                }
-
-                if (debouncedSearch.trim() !== '') {
-                    params.set('search', debouncedSearch.trim());
-                }
-
-                if (city.trim() !== '') {
-                    params.set('city', city.trim());
-                }
-
-                // Envoyer la requête à Symfony
-                const response = await fetch(
-                    `/api/restaurants?${params.toString()}`,
-                    { signal: controller.signal }
-                );
-
-                if (!response.ok) {
-                    throw new Error(
-                        'Erreur lors du filtrage des restaurants.'
-                    );
-                }
-
-                const payload = await response.json();
-                const data = payload.restaurants ?? payload;
-                setFilteredRestaurants(data);
+                setFilteredRestaurants(await getRestaurants({
+                    category: selectedCategory,
+                    search: debouncedSearch,
+                    city: debouncedCity,
+                }, controller.signal));
 
             } catch (error) {
 
@@ -124,6 +103,7 @@ export default function Home({ favorites, onToggleFavorite }) {
                 // Ne modifier l'état que si la requête n'a pas été annulée
                 if (!controller.signal.aborted) {
                     setIsFiltering(false);
+                    setLoading(false);
                 }
             }
         }
@@ -134,16 +114,36 @@ export default function Home({ favorites, onToggleFavorite }) {
             controller.abort();
         };
 
-    }, [debouncedSearch, selectedCategory, city, restaurants, hasActiveFilters]);
+    }, [debouncedSearch, debouncedCity, selectedCategory, hasActiveFilters]);
 
-    // Récupérer les catégories disponibles
-    const categories = [
-        ...new Set(restaurants.map((restaurant) => restaurant.category))
+    // Récupérer les catégories disponibles dans les résultats actifs
+    const categorySource = filteredRestaurants;
+    const discoveredCategories = categorySource
+        .flatMap((restaurant) => String(restaurant.category || '')
+            .split(/[;,]/)
+            .map((category) => category.trim())
+            .filter(Boolean));
+    const standardCategories = [
+        'Asiatique',
+        'Japonais',
+        'Chinois',
+        'Coréen',
+        'Thaïlandais',
+        'Vietnamien',
+        'Indien',
+        'Italien',
+        'Français',
     ];
+    const categories = [
+        ...new Set([...standardCategories, ...discoveredCategories]),
+    ].sort((a, b) => a.localeCompare(b, 'fr'));
 
     // Identifier le restaurant mis en avant
-    const displayedRestaurants = hasActiveFilters ? filteredRestaurants : restaurants;
-    const featuredRestaurant = restaurants[0];
+    const displayedRestaurants = filteredRestaurants;
+    const featuredRestaurant = displayedRestaurants[0];
+    const hasOpenStreetMapResults = displayedRestaurants.some(
+        (restaurant) => restaurant.provider === 'openstreetmap',
+    );
 
     return (
         <div className="home">
@@ -151,6 +151,41 @@ export default function Home({ favorites, onToggleFavorite }) {
             <Header />
 
             <main>
+
+                {showCityOnboarding && (
+                    <div className="city-onboarding" role="dialog" aria-modal="true" aria-labelledby="city-onboarding-title">
+                        <form className="city-onboarding-card" onSubmit={chooseOnboardingCity}>
+                            <span className="city-onboarding-eyebrow">PERSONNALISEZ VOTRE DÉCOUVERTE</span>
+                            <h1 id="city-onboarding-title">Dans quelle ville avez-vous envie de manger ?</h1>
+                            <p>
+                                Nous chargerons uniquement les restaurants proches de cette ville.
+                            </p>
+                            <input
+                                autoFocus
+                                required
+                                type="text"
+                                value={onboardingCity}
+                                onChange={(event) => setOnboardingCity(event.target.value)}
+                                placeholder="Votre ville"
+                                aria-label="Votre ville"
+                            />
+                            <div className="city-suggestions" aria-label="Villes suggérées">
+                                {['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Bordeaux'].map((suggestedCity) => (
+                                    <button
+                                        type="button"
+                                        key={suggestedCity}
+                                        onClick={() => setOnboardingCity(suggestedCity)}
+                                    >
+                                        {suggestedCity}
+                                    </button>
+                                ))}
+                            </div>
+                            <button className="city-onboarding-submit" type="submit">
+                                Découvrir les restaurants
+                            </button>
+                        </form>
+                    </div>
+                )}
 
                 <Hero />
 
@@ -191,6 +226,14 @@ export default function Home({ favorites, onToggleFavorite }) {
 
                     ) : (
                         <>
+                            {displayedRestaurants.length > 0 && (
+                                <p className="results-summary" aria-live="polite">
+                                    {displayedRestaurants.length} résultat{displayedRestaurants.length > 1 ? 's' : ''}
+                                    {hasOpenStreetMapResults
+                                        ? ' — données OpenStreetMap'
+                                        : ' — catalogue FoodSpot'}
+                                </p>
+                            )}
                             <RestaurantList
                                 restaurants={displayedRestaurants}
                                 favorites={favorites}

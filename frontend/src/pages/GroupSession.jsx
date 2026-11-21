@@ -2,17 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import Header from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
+import { apiRequest } from '../api/foodSpotApi.js';
 import '../styles/GroupSession.css';
-
-async function request(url, options = {}) {
-    const response = await fetch(url, {
-        headers: { 'Content-Type': 'application/json' },
-        ...options,
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Une erreur est survenue.');
-    return data;
-}
 
 export default function GroupSession() {
     const { code } = useParams();
@@ -39,7 +30,7 @@ export default function GroupSession() {
         if (code) {
             const refresh = () => {
                 setIsRefreshing(true);
-                return request(`/api/group-sessions/${code}`)
+                return apiRequest(`/api/group-sessions/${code}`)
                     .then(setSession)
                     .catch((requestError) => setError(requestError.message))
                     .finally(() => setIsRefreshing(false));
@@ -54,7 +45,7 @@ export default function GroupSession() {
         event.preventDefault();
         setIsSubmitting(true);
         try {
-            const data = await request('/api/group-sessions', {
+            const data = await apiRequest('/api/group-sessions', {
                 method: 'POST',
                 body: JSON.stringify({ name, city, nickname }),
             });
@@ -74,13 +65,13 @@ export default function GroupSession() {
         event.preventDefault();
         setIsSubmitting(true);
         try {
-            const participant = await request(`/api/group-sessions/${code}/participants`, {
+            const participant = await apiRequest(`/api/group-sessions/${code}/participants`, {
                 method: 'POST',
                 body: JSON.stringify({ nickname }),
             });
             localStorage.setItem(`foodspot-participant-${code}`, participant.id);
             setParticipantId(participant.id);
-            setSession(await request(`/api/group-sessions/${code}`));
+            setSession(await apiRequest(`/api/group-sessions/${code}`));
             setMessage('Vous avez rejoint la session.');
         } catch (requestError) {
             setError(requestError.message);
@@ -93,7 +84,7 @@ export default function GroupSession() {
         event.preventDefault();
         setIsSubmitting(true);
         try {
-            await request(`/api/group-sessions/${code}/preferences`, {
+            await apiRequest(`/api/group-sessions/${code}/preferences`, {
                 method: 'PUT',
                 body: JSON.stringify({
                     participantId,
@@ -117,7 +108,7 @@ export default function GroupSession() {
     async function leaveSession() {
         setIsSubmitting(true);
         try {
-            await request(`/api/group-sessions/${code}/participants/${participantId}`, { method: 'DELETE' });
+            await apiRequest(`/api/group-sessions/${code}/participants/${participantId}`, { method: 'DELETE' });
             localStorage.removeItem(`foodspot-participant-${code}`);
             window.location.href = '/group';
         } catch (requestError) {
@@ -130,7 +121,7 @@ export default function GroupSession() {
     async function loadRecommendations() {
         setIsSubmitting(true);
         try {
-            const data = await request(`/api/group-sessions/${code}/recommendations`);
+            const data = await apiRequest(`/api/group-sessions/${code}/recommendations`);
             setRecommendations(data.recommendations);
         } catch (requestError) {
             setError(requestError.message);
@@ -143,7 +134,7 @@ export default function GroupSession() {
     async function vote(restaurantId) {
         setIsSubmitting(true);
         try {
-            await request(`/api/group-sessions/${code}/votes`, {
+            await apiRequest(`/api/group-sessions/${code}/votes`, {
                 method: 'POST',
                 body: JSON.stringify({ participantId, restaurantId }),
             });
@@ -160,12 +151,12 @@ export default function GroupSession() {
         const mode = event.currentTarget.dataset.mode;
         setIsSubmitting(true);
         try {
-            const data = await request(`/api/group-sessions/${code}/decision`, {
+            const data = await apiRequest(`/api/group-sessions/${code}/decision`, {
                 method: 'POST',
                 body: JSON.stringify({ participantId, mode }),
             });
             setResult(data.result);
-            setSession(await request(`/api/group-sessions/${code}`));
+            setSession(await apiRequest(`/api/group-sessions/${code}`));
         } catch (requestError) {
             setError(requestError.message);
         } finally {
