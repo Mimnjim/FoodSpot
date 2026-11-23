@@ -1,13 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&display=swap');
 
 :root {
-    --background: #F7F3ED;
-    --text: #171717;
-    --secondary: #6F6A63;
-    --accent: #D85C3A;
+    --background: #FFFDF7;
+    --text: #17152B;
+    --secondary: #706C82;
+    --accent: #FF4D2E;
+    --yellow: #FFD84D;
+    --violet: #635BFF;
+    --green: #20C997;
+    --pink: #FF7AB8;
+    --sky: #53C7EC;
     --white: #FFFFFF;
-    --border: #E5DED4;
-    --light-accent: #F1E2D9;
+    --border: #DDD7EA;
+    --light-accent: #FFF0EA;
     --content-width: 1200px;
     --page-gutter: clamp(1.2rem, 5vw, 5rem);
     --section-space: clamp(4rem, 8vw, 7rem);

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import '../styles/Hero.css';
 
 export default function Hero() {
@@ -8,16 +9,25 @@ export default function Hero() {
             <div className="hero-content">
 
                 <span className="hero-label">
-                    DÉCOUVERTE CULINAIRE
+                    TROUVER ENSEMBLE
                 </span>
 
                 <h1>
-                    Les bons restaurants sont plus proches que vous ne le pensez.
+                    Qui veut manger quoi ?
                 </h1>
 
                 <p>
-                    Découvrez des restaurants, des adresses secrètes et des lieux mémorables.
+                    Répondez vite à quelques questions et trouvez le lieu qui rassemble tout le monde.
                 </p>
+                <div className="hero-actions">
+                    <Link to="/group" className="hero-primary-action">Décider à plusieurs</Link>
+                    <a href="#explorer" className="hero-secondary-action">Explorer seul</a>
+                </div>
+                <div className="hero-proof">
+                    <span><strong>1</strong> session</span>
+                    <span><strong>2 min</strong> pour répondre</span>
+                    <span><strong>1</strong> choix partagé</span>
+                </div>
 
             </div>
 

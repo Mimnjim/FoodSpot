@@ -50,6 +50,13 @@
 }
 
 .category-filter-trigger {
+    border: 2px solid var(--text) !important;
+    background: var(--yellow) !important;
+    color: var(--text) !important;
+    box-shadow: 4px 4px 0 var(--text);
+}
+
+.category-filter-trigger {
     display: inline-flex;
     align-items: center;
     gap: 0.65rem;
@@ -76,8 +83,10 @@
     overflow: auto;
     padding: clamp(1.5rem, 5vw, 2.5rem);
     border: 1px solid var(--border);
+    border: 3px solid var(--text);
+    border-radius: 16px;
     background: var(--background);
-    box-shadow: 0 24px 80px rgba(23, 23, 23, 0.24);
+    box-shadow: 12px 12px 0 var(--yellow);
 }
 
 .category-modal-header {

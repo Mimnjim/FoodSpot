@@ -1,10 +1,17 @@
 .hero {
+    position: relative;
+    overflow: hidden;
     min-height: clamp(500px, calc(100svh - 84px), 680px);
 
     display: flex;
     align-items: center;
 
     padding: clamp(3.5rem, 7vw, 6rem) var(--page-gutter);
+    background:
+        radial-gradient(circle at 86% 18%, var(--yellow) 0 7.5%, transparent 8%),
+        radial-gradient(circle at 94% 62%, var(--pink) 0 11%, transparent 11.5%),
+        radial-gradient(circle at 72% 86%, var(--sky) 0 9%, transparent 9.5%),
+        linear-gradient(135deg, #FFFDF7 0%, #FFF2F7 55%, #EFF9FF 100%);
 }
 
 .hero-content {
@@ -25,13 +32,24 @@
 }
 
 .hero h1 {
-    max-width: 900px;
+    max-width: 760px;
 
     font-family: 'DM Serif Display', serif;
     font-size: clamp(4rem, 8vw, 7.5rem);
     font-weight: 400;
-    line-height: 0.9;
+    line-height: 0.92;
     letter-spacing: -0.045em;
+}
+
+.hero h1::after {
+    content: '';
+    display: block;
+    width: 94px;
+    height: 12px;
+    margin-top: 18px;
+    border-radius: 999px;
+    background: var(--yellow);
+    transform: rotate(-2deg);
 }
 
 .hero p {
@@ -42,6 +60,56 @@
 
     font-size: 1.05rem;
     line-height: 1.7;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 2rem;
+}
+
+.hero-primary-action,
+.hero-secondary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0.9rem 1.35rem;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+.hero-primary-action {
+    background: var(--violet);
+    color: var(--white);
+    box-shadow: 8px 8px 0 var(--text);
+}
+
+.hero-secondary-action {
+    border: 1px solid var(--text);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.hero-primary-action:hover,
+.hero-secondary-action:hover {
+    transform: translateY(-2px);
+}
+
+.hero-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.5rem;
+}
+
+.hero-proof span {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid rgba(24, 21, 42, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.68);
+    color: var(--secondary);
+    font-size: 0.78rem;
 }
 
 @media (max-width: 900px) {

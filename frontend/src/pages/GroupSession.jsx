@@ -11,9 +11,9 @@ export default function GroupSession() {
     const [nickname, setNickname] = useState('');
     const [city, setCity] = useState('');
     const [name, setName] = useState('');
-    const [likedCuisines, setLikedCuisines] = useState('');
-    const [avoidedCuisines, setAvoidedCuisines] = useState('');
-    const [restrictions, setRestrictions] = useState('');
+    const [likedCuisines, setLikedCuisines] = useState([]);
+    const [avoidedCuisines, setAvoidedCuisines] = useState([]);
+    const [restrictions, setRestrictions] = useState([]);
     const [budget, setBudget] = useState('');
     const [recommendations, setRecommendations] = useState([]);
     const [participantId, setParticipantId] = useState(
@@ -25,6 +25,14 @@ export default function GroupSession() {
     const [result, setResult] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const cuisineChoices = ['Français', 'Italien', 'Japonais', 'Asiatique', 'Libanais', 'Mexicain', 'Végétarien'];
+    const restrictionChoices = ['Sans gluten', 'Végétarien', 'Végétalien', 'Halal', 'Sans lactose'];
+
+    function toggleChoice(choice, values, setValues) {
+        setValues(values.includes(choice)
+            ? values.filter((value) => value !== choice)
+            : [...values, choice]);
+    }
 
     useEffect(() => {
         if (code) {
@@ -89,9 +97,9 @@ export default function GroupSession() {
                 body: JSON.stringify({
                     participantId,
                     preferences: {
-                        likedCuisines: likedCuisines.split(',').map((item) => item.trim()).filter(Boolean),
-                        avoidedCuisines: avoidedCuisines.split(',').map((item) => item.trim()).filter(Boolean),
-                        restrictions: restrictions.split(',').map((item) => item.trim()).filter(Boolean),
+                        likedCuisines,
+                        avoidedCuisines,
+                        restrictions,
                         budget: budget || null,
                     },
                 }),
@@ -230,9 +238,51 @@ export default function GroupSession() {
                         {participantId && session.status === 'collecting' && (
                             <>
                                 <form onSubmit={savePreferences} className="group-form">
-                                    <input placeholder="Cuisines aimées, séparées par des virgules" value={likedCuisines} onChange={(event) => setLikedCuisines(event.target.value)} />
-                                    <input placeholder="Cuisines à éviter, séparées par des virgules" value={avoidedCuisines} onChange={(event) => setAvoidedCuisines(event.target.value)} />
-                                    <input placeholder="Restrictions, séparées par des virgules" value={restrictions} onChange={(event) => setRestrictions(event.target.value)} />
+                                    <fieldset className="preference-fieldset">
+                                        <legend>Qu'est-ce que vous aimez ?</legend>
+                                        <div className="preference-options">
+                                            {cuisineChoices.map((choice) => (
+                                                <button
+                                                    type="button"
+                                                    key={choice}
+                                                    className={likedCuisines.includes(choice) ? 'active' : ''}
+                                                    onClick={() => toggleChoice(choice, likedCuisines, setLikedCuisines)}
+                                                >
+                                                    {choice}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </fieldset>
+                                    <fieldset className="preference-fieldset">
+                                        <legend>Qu'est-ce que vous évitez ?</legend>
+                                        <div className="preference-options">
+                                            {cuisineChoices.map((choice) => (
+                                                <button
+                                                    type="button"
+                                                    key={choice}
+                                                    className={avoidedCuisines.includes(choice) ? 'active' : ''}
+                                                    onClick={() => toggleChoice(choice, avoidedCuisines, setAvoidedCuisines)}
+                                                >
+                                                    {choice}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </fieldset>
+                                    <fieldset className="preference-fieldset">
+                                        <legend>Restrictions alimentaires</legend>
+                                        <div className="preference-options">
+                                            {restrictionChoices.map((choice) => (
+                                                <button
+                                                    type="button"
+                                                    key={choice}
+                                                    className={restrictions.includes(choice) ? 'active' : ''}
+                                                    onClick={() => toggleChoice(choice, restrictions, setRestrictions)}
+                                                >
+                                                    {choice}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </fieldset>
                                     <select aria-label="Budget" value={budget} onChange={(event) => setBudget(event.target.value)}>
                                         <option value="">Budget non renseigné</option>
                                         <option value="1">€</option>

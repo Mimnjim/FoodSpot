@@ -231,7 +231,7 @@ export default function Home({ favorites, onToggleFavorite }) {
 
                 <Hero />
 
-                <section className="discover-section">
+                <section id="explorer" className="discover-section">
 
                     <div className="section-header">
 

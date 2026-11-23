@@ -31,7 +31,7 @@
 .section-header span {
     display: block;
 
-    color: var(--accent);
+    color: var(--violet);
 
     font-size: 0.7rem;
     font-weight: 700;
@@ -84,6 +84,13 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+}
+
+.discover-section {
+    background: var(--white);
+    border: 2px solid var(--text);
+    border-radius: 18px;
+    box-shadow: 10px 10px 0 var(--yellow);
 }
 
 .city-onboarding {

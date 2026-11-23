@@ -7,14 +7,27 @@
     align-items: center;
     justify-content: space-between;
 
-    background-color: var(--background);
+    background: rgba(255, 253, 247, 0.92);
     border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(14px);
 }
 
 .header-logo {
+    color: var(--text);
     font-family: 'DM Serif Display', serif;
     font-size: 2rem;
     letter-spacing: -0.03em;
+}
+
+.header-logo::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 16px -7px 0 var(--yellow);
 }
 
 .header-nav ul {
@@ -63,7 +76,7 @@
 
     border-radius: 999px;
 
-    background-color: var(--text);
+    background: var(--violet);
     color: var(--white);
 
     font-size: 0.8rem;
@@ -77,7 +90,7 @@
 }
 
 .header-button:hover {
-    background-color: var(--accent);
+    background: var(--accent);
     transform: translateY(-2px);
 }
 
