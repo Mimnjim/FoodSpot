@@ -50,6 +50,18 @@
     font-size: 2rem;
 }
 
+.restaurant-card-placeholder {
+    position: relative;
+}
+
+.restaurant-card-placeholder[hidden] {
+    display: none;
+}
+
+.restaurant-card-image > .restaurant-card-placeholder:not([hidden]) + * {
+    display: none;
+}
+
 .restaurant-card:hover .restaurant-card-image img {
     transform: scale(1.05);
 }

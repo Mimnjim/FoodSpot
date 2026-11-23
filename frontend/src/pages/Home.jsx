@@ -14,6 +14,7 @@ import '../styles/Home.css';
 export default function Home({ favorites, onToggleFavorite }) {
 
     const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+    const [baseRestaurants, setBaseRestaurants] = useState([]);
 
     const [loading, setLoading] = useState(false);
     const [isFiltering, setIsFiltering] = useState(false);
@@ -73,73 +74,114 @@ export default function Home({ favorites, onToggleFavorite }) {
 
     // Filtrer les restaurants depuis Symfony uniquement lorsqu'un critère est actif
     useEffect(() => {
-        if (!hasActiveFilters) {
+        if (!city.trim() || debouncedCity.trim() !== city.trim()) {
             return undefined;
         }
-
-        const controller = new AbortController();
-
-        async function fetchFilteredRestaurants() {
-
-            setIsFiltering(true);
-
-            try {
-                setError(null);
-
-                setFilteredRestaurants(await getRestaurants({
-                    category: selectedCategory,
-                    search: debouncedSearch,
-                    city: debouncedCity,
-                }, controller.signal));
-
-            } catch (error) {
-
-                if (error.name !== 'AbortError') {
-                    setError(error.message);
-                }
-
-            } finally {
-
-                // Ne modifier l'état que si la requête n'a pas été annulée
-                if (!controller.signal.aborted) {
-                    setIsFiltering(false);
+        if (search.trim() === '' && debouncedSearch.trim() === '' &&
+            selectedCategory === 'Toutes') {
+            const controller = new AbortController();
+            getRestaurants({ city: debouncedCity }, controller.signal)
+                .then((restaurants) => {
+                    setBaseRestaurants(restaurants);
+                    setFilteredRestaurants(restaurants);
                     setLoading(false);
-                }
-            }
+                    setIsFiltering(false);
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') setError(error.message);
+                    setIsFiltering(false);
+                });
+            return () => controller.abort();
         }
+        return undefined;
+    }, [city, debouncedCity, search, debouncedSearch, selectedCategory]);
 
-        fetchFilteredRestaurants();
+    useEffect(() => {
+        if (debouncedSearch.trim() === '' || debouncedCity.trim() !== city.trim()) {
+            return undefined;
+        }
+        const controller = new AbortController();
+        getRestaurants({
+            category: 'Toutes',
+            search: debouncedSearch,
+            city: debouncedCity,
+        }, controller.signal).then((restaurants) => {
+            setFilteredRestaurants(restaurants);
+        }).catch((error) => {
+            if (error.name !== 'AbortError') setError(error.message);
+        }).finally(() => {
+            if (!controller.signal.aborted) setIsFiltering(false);
+        });
+        return () => controller.abort();
+    }, [debouncedSearch, debouncedCity, city, selectedCategory, hasActiveFilters]);
 
-        return () => {
-            controller.abort();
+    function normalizeCategoryLabel(category) {
+        const value = String(category || '').trim().toLowerCase();
+        const aliases = {
+            asian: 'Asiatique',
+            asia: 'Asiatique',
+            asiatique: 'Asiatique',
+            chinese: 'Chinois',
+            chinois: 'Chinois',
+            japan: 'Japonais',
+            japanese: 'Japonais',
+            japonais: 'Japonais',
+            korean: 'Coréen',
+            coréen: 'Coréen',
+            thai: 'Thaïlandais',
+            thaï: 'Thaïlandais',
+            thaïlandais: 'Thaïlandais',
+            vietnamese: 'Vietnamien',
+            viet: 'Vietnamien',
+            vietnamien: 'Vietnamien',
+            indian: 'Indien',
+            indien: 'Indien',
+            italian: 'Italien',
+            italian_pizza: 'Italien',
+            italien: 'Italien',
+            french: 'Français',
+            français: 'Français',
+            francais: 'Français',
+            mediterranean: 'Méditerranéen',
+            mediterranean_food: 'Méditerranéen',
+            mexican: 'Mexicain',
+            mexicain: 'Mexicain',
+            pizza: 'Pizza',
+            burger: 'Burger',
+            bistro: 'Bistro',
+            crepe: 'Crêpes',
+            seafood: 'Fruits de mer',
+            steak_house: 'Grill',
+            lebanese: 'Libanais',
+            turkish: 'Turc',
+            restaurant: 'Restaurant',
         };
 
-    }, [debouncedSearch, debouncedCity, selectedCategory, hasActiveFilters]);
+        const firstValue = value.split(/[;,]/)[0].trim();
+        return aliases[firstValue] || aliases[value] || null;
+    }
 
-    // Récupérer les catégories disponibles dans les résultats actifs
-    const categorySource = filteredRestaurants;
-    const discoveredCategories = categorySource
-        .flatMap((restaurant) => String(restaurant.category || '')
-            .split(/[;,]/)
-            .map((category) => category.trim())
-            .filter(Boolean));
-    const standardCategories = [
-        'Asiatique',
-        'Japonais',
-        'Chinois',
-        'Coréen',
-        'Thaïlandais',
-        'Vietnamien',
-        'Indien',
-        'Italien',
-        'Français',
-    ];
-    const categories = [
-        ...new Set([...standardCategories, ...discoveredCategories]),
-    ].sort((a, b) => a.localeCompare(b, 'fr'));
+    const categories = [...new Set(
+        baseRestaurants
+            .map((restaurant) => normalizeCategoryLabel(restaurant.category))
+            .filter(Boolean),
+    )].sort((a, b) => a.localeCompare(b, 'fr'));
 
-    // Identifier le restaurant mis en avant
-    const displayedRestaurants = filteredRestaurants;
+    // Identifier les résultats à afficher, avec filtre catégorie entièrement local
+    const categoryFilteredRestaurants = selectedCategory === 'Toutes'
+        ? baseRestaurants
+        : baseRestaurants.filter((restaurant) => {
+            const category = String(restaurant.category || '').toLowerCase();
+            const selected = selectedCategory.toLowerCase();
+            if (selected === 'asiatique') {
+                return /asian|china|chinese|japan|korea|thai|viet|indian|lebanese|turkish|mediterranean|seafood/.test(category);
+            }
+            if (selected === 'français') return category.includes('french');
+            return category.includes(selected);
+        });
+    const displayedRestaurants = debouncedSearch.trim() !== ''
+        ? filteredRestaurants
+        : categoryFilteredRestaurants;
     const featuredRestaurant = displayedRestaurants[0];
     const hasOpenStreetMapResults = displayedRestaurants.some(
         (restaurant) => restaurant.provider === 'openstreetmap',

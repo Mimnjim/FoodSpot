@@ -15,9 +15,25 @@ export default function RestaurantCard({
             >
                 <div className="restaurant-card-image">
                     {restaurant.image ? (
-                        <img src={restaurant.image} alt={restaurant.name} />
+                        <img
+                            src={restaurant.image}
+                            alt={`Photo de ${restaurant.name}`}
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(event) => {
+                                event.currentTarget.style.display = 'none';
+                                event.currentTarget.nextElementSibling?.removeAttribute('hidden');
+                            }}
+                        />
                     ) : (
-                        <span className="restaurant-card-placeholder">FoodSpot</span>
+                        <span className="restaurant-card-placeholder" role="img" aria-label={`Illustration de ${restaurant.name}`}>
+                            {restaurant.name.slice(0, 1).toUpperCase()}
+                        </span>
+                    )}
+                    {restaurant.image && (
+                        <span className="restaurant-card-placeholder" hidden role="img" aria-label={`Illustration de ${restaurant.name}`}>
+                            {restaurant.name.slice(0, 1).toUpperCase()}
+                        </span>
                     )}
                 </div>
 
