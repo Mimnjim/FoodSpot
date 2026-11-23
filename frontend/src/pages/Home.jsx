@@ -38,7 +38,7 @@ export default function Home({ favorites, onToggleFavorite }) {
     useEffect(() => {
         const timeout = setTimeout(() => {
             setDebouncedSearch(search);
-        }, 400);
+        }, 300);
 
         return () => {
             clearTimeout(timeout);
@@ -51,7 +51,7 @@ export default function Home({ favorites, onToggleFavorite }) {
             if (city.trim()) {
                 localStorage.setItem('foodspot-city', city.trim());
             }
-        }, 600);
+        }, 400);
 
         return () => {
             clearTimeout(timeout);

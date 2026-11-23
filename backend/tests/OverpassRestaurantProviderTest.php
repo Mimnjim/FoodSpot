@@ -52,6 +52,40 @@ final class OverpassRestaurantProviderTest extends TestCase
         $provider->search('', null, null);
     }
 
+    public function testItLimitsDefaultResultsToFiftyAndKeepsThemNamed(): void
+    {
+        $elements = [];
+        $cuisines = ['french', 'italian', 'japanese', 'thai', 'mexican'];
+        for ($index = 1; $index <= 70; $index++) {
+            $elements[] = [
+                'id' => $index,
+                'lat' => 48.85,
+                'lon' => 2.35,
+                'tags' => [
+                    'name' => 'Restaurant ' . $index,
+                    'cuisine' => $cuisines[$index % count($cuisines)],
+                ],
+            ];
+        }
+
+        $httpClient = new MockHttpClient(function () use ($elements) {
+            return new MockResponse(json_encode(
+                ['elements' => $elements],
+                JSON_THROW_ON_ERROR,
+            ), ['http_code' => 200]);
+        });
+        $provider = new OverpassRestaurantProvider(
+            new RestaurantNormalizer(),
+            new ArrayAdapter(),
+            $httpClient,
+        );
+
+        $restaurants = $provider->search('Paris', null, null);
+
+        self::assertCount(50, $restaurants);
+        self::assertNotContains('', array_column($restaurants, 'name'));
+    }
+
     public function testItReportsAnUnavailableServiceAfterFailedInstances(): void
     {
         $httpClient = new MockHttpClient(function () {

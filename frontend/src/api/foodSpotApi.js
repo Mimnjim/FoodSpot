@@ -32,7 +32,7 @@ export async function getRestaurants(filters = {}, signal) {
 
     const query = params.toString();
     const timeoutController = new AbortController();
-    const timeout = window.setTimeout(() => timeoutController.abort(), 8000);
+    const timeout = window.setTimeout(() => timeoutController.abort(), 3200);
 
     let combinedSignal = timeoutController.signal;
     if (signal) {

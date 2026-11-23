@@ -21,7 +21,7 @@ final class RestaurantSearchService
      */
     public function search(?string $city, ?string $category, ?string $search): array
     {
-        $cacheKey = 'restaurant_search_v1_' . hash('sha256', implode('|', [
+        $cacheKey = 'restaurant_search_v2_' . hash('sha256', implode('|', [
             trim((string) $city),
             trim((string) $category),
             trim((string) $search),

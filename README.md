@@ -29,12 +29,13 @@ npm run dev
 ```
 
 Le proxy Vite redirige `/api` vers `http://127.0.0.1:8000`. La ville choisie à
-la première visite est mémorisée dans le navigateur et les recherches utilisent
-Overpass. Les instances publiques peuvent être temporairement indisponibles ou
-limiter les requêtes : FoodSpot cache les recherches une heure, tente plusieurs
-instances avec un timeout réseau court et utilise les restaurants locaux filtrés
-par ville si aucun service distant ne répond. Les résultats Overpass sont limités
-à 20 établissements par recherche.
+la première visite est mémorisée dans le navigateur. Les listes par ville utilisent
+Nominatim, une source OpenStreetMap adaptée aux affichages rapides. Les filtres
+précis utilisent Overpass en complément. Les instances publiques peuvent être
+temporaires ou limiter les requêtes : FoodSpot cache les recherches une heure,
+utilise des timeouts courts et conserve les restaurants locaux uniquement en
+dernier recours. Les listes affichent jusqu'à 50 établissements réels, diversifiés
+par type de cuisine.
 
 ## Architecture API frontend
 
