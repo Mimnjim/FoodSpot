@@ -19,7 +19,10 @@ export async function apiRequest(url, options = {}) {
         );
     }
     if (!response.ok) {
-        const error = new Error(data.message || 'Une erreur est survenue.');
+        const error = new Error(
+            data.message
+            || (response.status === 404 ? 'Cette ressource est introuvable.' : 'Une erreur est survenue.')
+        );
         error.status = response.status;
         throw error;
     }

@@ -88,11 +88,21 @@ final class GroupSessionController extends AbstractController
         if ($session === null) {
             return $this->json(['message' => 'Session introuvable.'], 404);
         }
-        if (!is_string($data['participantId'] ?? null) || !is_array($data['preferences'] ?? null)) {
+        $participantId = $data['participantId'] ?? null;
+        $preferences = $data['preferences'] ?? null;
+        if (!is_array($preferences)) {
+            $preferences = [
+                'likedCuisines' => $data['likedCuisines'] ?? [],
+                'avoidedCuisines' => $data['avoidedCuisines'] ?? [],
+                'restrictions' => $data['restrictions'] ?? [],
+                'budget' => $data['budget'] ?? null,
+            ];
+        }
+        if (!is_string($participantId) || $participantId === '') {
             return $this->json(['message' => 'participantId et preferences sont requis.'], 400);
         }
         try {
-            $service->savePreferences($session, $data['participantId'], $data['preferences']);
+            $service->savePreferences($session, $participantId, $preferences);
             return $this->json(['message' => 'Préférences enregistrées.']);
         } catch (\RuntimeException $exception) {
             return $this->json(['message' => $exception->getMessage()], 400);
@@ -158,8 +168,20 @@ final class GroupSessionController extends AbstractController
     /** @return array<string, mixed> */
     private function jsonBody(Request $request): array
     {
-        $data = json_decode($request->getContent(), true);
-        return is_array($data) ? $data : [];
+        $raw = $request->getContent();
+        if ($raw !== '') {
+            try {
+                $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+                return is_array($decoded) ? $decoded : [];
+            } catch (\JsonException) {
+                return [];
+            }
+        }
+        $payload = $request->getPayload()->all();
+        if ($payload !== []) {
+            return $payload;
+        }
+        return $request->request->all();
     }
 
     /** @return array<string, mixed> */

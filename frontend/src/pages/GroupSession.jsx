@@ -9,7 +9,9 @@ export default function GroupSession() {
     const { code } = useParams();
     const [session, setSession] = useState(null);
     const [nickname, setNickname] = useState('');
-    const [city, setCity] = useState('');
+    const [city, setCity] = useState(
+        () => localStorage.getItem('foodspot-city') || '',
+    );
     const [name, setName] = useState('');
     const [likedCuisines, setLikedCuisines] = useState([]);
     const [avoidedCuisines, setAvoidedCuisines] = useState([]);
@@ -176,6 +178,16 @@ export default function GroupSession() {
         return Boolean(session?.votes?.[participant.id]);
     }
 
+    async function copyInviteLink() {
+        const inviteUrl = `${window.location.origin}/group/${session.code}`;
+        try {
+            await navigator.clipboard.writeText(inviteUrl);
+            setMessage('Lien d’invitation copié.');
+        } catch {
+            setError('Impossible de copier automatiquement le lien.');
+        }
+    }
+
     return (
         <div className="group-page">
             <Header />
@@ -204,6 +216,17 @@ export default function GroupSession() {
                         <span className="eyebrow">SESSION {session.code}</span>
                         <h1>{session.name}</h1>
                         <p>{session.city} · {session.participants.length} participant(s) · {Object.keys(session.preferences || {}).length} réponse(s)</p>
+                        {session.status === 'collecting' && (
+                            <div className="group-share-card">
+                                <div>
+                                    <span>INVITER LE GROUPE</span>
+                                    <strong>{session.code}</strong>
+                                </div>
+                                <button type="button" onClick={copyInviteLink}>
+                                    Copier le lien
+                                </button>
+                            </div>
+                        )}
                         <div className="participant-list" aria-label="Participants">
                             {session.participants.map((participant) => (
                                 <span key={participant.id} className={hasVoted(participant) ? 'participant is-ready' : 'participant'}>

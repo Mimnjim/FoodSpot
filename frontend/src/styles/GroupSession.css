@@ -29,8 +29,6 @@
         radial-gradient(circle at 92% 8%, var(--yellow) 0 5.5%, transparent 6%),
         linear-gradient(145deg, var(--white) 0%, #FFF6FC 100%);
     box-shadow: 12px 12px 0 var(--violet);
-    background: var(--white);
-    border: 2px solid var(--border);
 }
 
 .group-panel h1 {
@@ -115,7 +113,7 @@
 .recommendations button {
     padding: .9rem 1.2rem;
     border-radius: 999px;
-    background: var(--text);
+    background: var(--violet);
     color: var(--white);
     cursor: pointer;
 }
@@ -150,6 +148,46 @@
 .group-error { color: #a33a2a; }
 .group-sync,
 .group-status { color: var(--secondary); }
+
+.group-share-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1.25rem 0;
+    padding: 1rem 1.1rem;
+    border: 2px solid var(--text);
+    border-radius: 12px;
+    background: var(--yellow);
+    box-shadow: 5px 5px 0 var(--text);
+}
+
+.group-share-card div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.group-share-card span {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.group-share-card strong {
+    font-size: 1.45rem;
+    letter-spacing: 0.12em;
+}
+
+.group-share-card button {
+    min-height: 44px;
+    padding: 0.7rem 1rem;
+    border: 2px solid var(--text);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--text);
+    font-weight: 800;
+    cursor: pointer;
+}
 
 .participant-list {
     display: flex;
