@@ -35,8 +35,8 @@ export default function RestaurantCard({
                     </div>
 
                     <div className="restaurant-card-meta">
-                        {restaurant.rating !== null ? <span>★ {restaurant.rating}</span> : <span>Note non renseignée</span>}
-                        {restaurant.priceRange ? <span>{restaurant.priceRange}</span> : <span>Prix non renseigné</span>}
+                        {restaurant.rating !== null && <span>★ {restaurant.rating}</span>}
+                        {restaurant.priceRange && <span>{restaurant.priceRange}</span>}
                         {restaurant.provider === 'openstreetmap' && (
                             <span className="restaurant-source">OpenStreetMap</span>
                         )}

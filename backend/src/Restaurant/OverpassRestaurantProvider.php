@@ -82,16 +82,23 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
             return null;
         }
 
-        $query = '[out:json][timeout:12];nwr(' . $providerId . ');out center tags;';
-        $payload = $this->cache->get('overpass_v5_id_' . $providerId, function (ItemInterface $item) use ($query): array {
-            $item->expiresAfter(self::CACHE_SECONDS);
-            $decoded = $this->request($query, null);
-            return is_array($decoded['elements'] ?? null) ? $decoded['elements'] : [];
-        });
+        $detail = $this->cache->get(
+            'osm_search_detail_v1_' . hash('sha256', $providerId),
+            function (ItemInterface $item): ?array {
+                $item->expiresAfter(1);
+                return null;
+            },
+        );
+        if ($detail !== null) {
+            return $detail;
+        }
 
-        return isset($payload[0]) && is_array($payload[0])
-            ? $this->normalizer->normalize($payload[0])
-            : null;
+        $nominatimDetail = $this->requestNominatimPlaceDetail($providerId);
+        if ($nominatimDetail !== null) {
+            return $nominatimDetail;
+        }
+
+        return null;
     }
 
     private function buildQuery(string $city, ?string $category, ?string $search): string
@@ -263,6 +270,64 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
         }
 
         throw new RuntimeException('Le service OpenStreetMap est momentanément indisponible.');
+    }
+
+    /** @return array<string, mixed>|null */
+    private function requestNominatimPlaceDetail(string $placeId): ?array
+    {
+        $url = 'https://nominatim.openstreetmap.org/lookup?' . http_build_query([
+            'osm_ids' => 'N' . $placeId,
+            'format' => 'jsonv2',
+            'addressdetails' => 1,
+            'extratags' => 1,
+            'namedetails' => 1,
+        ]);
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => ['User-Agent' => 'FoodSpot/1.0'],
+                'timeout' => 3,
+            ]);
+            $payload = $response->toArray();
+        } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface) {
+            return null;
+        }
+
+        $place = is_array($payload[0] ?? null) ? $payload[0] : null;
+        if ($place === null) {
+            return null;
+        }
+
+        $address = $place['address'] ?? [];
+        $extratags = $place['extratags'] ?? [];
+        $name = $place['name'] ?? $place['display_name'] ?? null;
+        if (!is_string($name) || trim($name) === '') {
+            return null;
+        }
+
+        $element = [
+            'id' => $placeId,
+            'lat' => isset($place['lat']) ? (float) $place['lat'] : null,
+            'lon' => isset($place['lon']) ? (float) $place['lon'] : null,
+            'tags' => array_filter([
+                'name' => $name,
+                'cuisine' => $extratags['cuisine'] ?? null,
+                'website' => $extratags['website'] ?? null,
+                'phone' => $extratags['phone'] ?? null,
+                'opening_hours' => $extratags['opening_hours'] ?? null,
+                'image' => $extratags['image'] ?? null,
+                'wikimedia_commons' => $extratags['wikimedia_commons'] ?? null,
+                'description' => $extratags['description'] ?? null,
+                'addr:street' => $address['road'] ?? null,
+                'addr:housenumber' => $address['house_number'] ?? null,
+                'addr:city' => $address['city'] ?? $address['town'] ?? $address['village'] ?? null,
+                'image' => $extratags['image'] ?? null,
+                'wikimedia_commons' => $extratags['wikimedia_commons'] ?? null,
+                'description' => $extratags['description'] ?? null,
+            ], static fn (mixed $value): bool => $value !== null),
+        ];
+
+        return $this->normalizer->normalize($element);
     }
 
     /** @return list<array<string, mixed>> */

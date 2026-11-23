@@ -7,7 +7,17 @@ export async function apiRequest(url, options = {}) {
         },
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(
+            response.status >= 500
+                ? 'Le serveur rencontre un problème temporaire.'
+                : 'La réponse du serveur est invalide.',
+        );
+    }
     if (!response.ok) {
         const error = new Error(data.message || 'Une erreur est survenue.');
         error.status = response.status;

@@ -29,7 +29,17 @@ final class RestaurantSearchService
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($city, $category, $search): array {
             $item->expiresAfter(3600);
-            return $this->searchUncached($city, $category, $search);
+            $restaurants = $this->searchUncached($city, $category, $search);
+            foreach ($restaurants as $restaurant) {
+                $this->cache->get(
+                    'osm_search_detail_v1_' . hash('sha256', (string) $restaurant['providerId']),
+                    function (ItemInterface $detailItem) use ($restaurant): array {
+                        $detailItem->expiresAfter(3600);
+                        return $restaurant;
+                    },
+                );
+            }
+            return $restaurants;
         });
     }
 
@@ -96,7 +106,37 @@ final class RestaurantSearchService
     public function findById(string $id): ?array
     {
         if (str_starts_with($id, 'osm-')) {
-            return $this->overpassProvider->findByProviderId(substr($id, 4));
+            $providerId = substr($id, 4);
+            $detailKey = 'osm_search_detail_v1_' . hash('sha256', $providerId);
+            $cachedDetail = $this->cache->get(
+                $detailKey,
+                function (ItemInterface $item): ?array {
+                    $item->expiresAfter(1);
+                    return null;
+                },
+            );
+            if ($cachedDetail !== null) {
+                return $cachedDetail;
+            }
+
+            $restaurant = $this->overpassProvider->findByProviderId($providerId);
+            if ($restaurant !== null) {
+                return $restaurant;
+            }
+
+            $cacheKey = 'osm_search_detail_v1_' . hash('sha256', $providerId);
+            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($providerId): ?array {
+                $item->expiresAfter(3600);
+                $cities = ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Bordeaux'];
+                foreach ($cities as $city) {
+                    foreach ($this->searchUncached($city, null, null) as $restaurant) {
+                        if ($restaurant['id'] === 'osm-' . $providerId) {
+                            return $restaurant;
+                        }
+                    }
+                }
+                return null;
+            });
         }
 
         if (!str_starts_with($id, 'local-') || !ctype_digit(substr($id, 6))) {

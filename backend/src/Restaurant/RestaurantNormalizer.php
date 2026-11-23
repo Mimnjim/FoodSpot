@@ -33,6 +33,22 @@ final class RestaurantNormalizer
         $priceRange = is_string($priceLevel) && ctype_digit($priceLevel)
             ? str_repeat('€', min(4, max(1, (int) $priceLevel)))
             : null;
+        $directImage = $tags['image'] ?? null;
+        $commonsImage = $tags['wikimedia_commons'] ?? null;
+        $image = null;
+        if (is_string($directImage) && filter_var($directImage, FILTER_VALIDATE_URL)) {
+            $image = $directImage;
+        } elseif (is_string($commonsImage) && str_starts_with($commonsImage, 'File:')) {
+            $filename = substr($commonsImage, 5);
+            $image = 'https://commons.wikimedia.org/wiki/Special:Redirect/file/'
+                . rawurlencode(str_replace(' ', '_', $filename));
+        } elseif (is_string($commonsImage) && str_starts_with($commonsImage, 'Category:')) {
+            $image = null;
+        }
+        $description = $tags['description'] ?? null;
+        if (!is_string($description) || trim($description) === '') {
+            $description = null;
+        }
 
         return [
             'id' => 'osm-' . ($element['id'] ?? ''),
@@ -49,8 +65,8 @@ final class RestaurantNormalizer
             'website' => $tags['website'] ?? $tags['contact:website'] ?? null,
             'phone' => $tags['phone'] ?? $tags['contact:phone'] ?? null,
             'openingHours' => $tags['opening_hours'] ?? null,
-            'description' => null,
-            'image' => null,
+            'description' => $description,
+            'image' => $image,
         ];
     }
 }

@@ -42,4 +42,24 @@ final class RestaurantNormalizerTest extends TestCase
         self::assertNull($result['location']);
         self::assertSame('Restaurant sans nom', $result['name']);
     }
+
+    public function testItUsesOnlyARealWikimediaCommonsImage(): void
+    {
+        $normalizer = new RestaurantNormalizer();
+
+        $result = $normalizer->normalize([
+            'id' => 43,
+            'lat' => 48.8566,
+            'lon' => 2.3522,
+            'tags' => [
+                'name' => 'Restaurant image',
+                'wikimedia_commons' => 'File:Restaurant sample.jpg',
+            ],
+        ], 'Paris');
+
+        self::assertSame(
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Restaurant_sample.jpg',
+            $result['image'],
+        );
+    }
 }

@@ -51,6 +51,8 @@ ou Overpass.
 - Fiches restaurants et favoris locaux ou OpenStreetMap.
 - Résultats réels mis en avant avec adresse, source et valeurs manquantes
   clairement identifiées.
+- Images importées automatiquement uniquement lorsqu'une URL OSM ou Wikimedia
+  Commons est réellement disponible; aucune image fictive n'est créée.
 - Première visite avec choix obligatoire de la ville, mémorisé dans le navigateur.
 - Attribution `© OpenStreetMap contributors`.
 - Sessions de groupe avec code de partage.

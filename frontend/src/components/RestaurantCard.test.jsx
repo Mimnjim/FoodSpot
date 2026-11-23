@@ -30,8 +30,6 @@ describe('RestaurantCard', () => {
         );
 
         expect(screen.getByText('Ville non renseignée')).toBeTruthy();
-        expect(screen.getByText('Note non renseignée')).toBeTruthy();
-        expect(screen.getByText('Prix non renseigné')).toBeTruthy();
         expect(screen.getByText('OpenStreetMap')).toBeTruthy();
     });
 

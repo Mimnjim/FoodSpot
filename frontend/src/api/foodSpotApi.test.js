@@ -10,7 +10,7 @@ describe('foodSpotApi', () => {
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,
             status: 200,
-            json: async () => ({
+            text: async () => JSON.stringify({
                 restaurants: [{ id: 'osm-1', name: 'Test' }],
             }),
         });
@@ -33,7 +33,7 @@ describe('foodSpotApi', () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
             ok: false,
             status: 404,
-            json: async () => ({ message: 'Restaurant introuvable' }),
+            text: async () => JSON.stringify({ message: 'Restaurant introuvable' }),
         }));
 
         await expect(getRestaurant('missing')).rejects.toMatchObject({
