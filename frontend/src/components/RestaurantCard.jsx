@@ -56,6 +56,12 @@ export default function RestaurantCard({
                         {restaurant.provider === 'openstreetmap' && (
                             <span className="restaurant-source">OpenStreetMap</span>
                         )}
+                        {restaurant.imageSource === 'panoramax' && (
+                            <span className="restaurant-source">Photo Panoramax</span>
+                        )}
+                        {restaurant.imageSource === 'wikimedia-commons' && (
+                            <span className="restaurant-source">Photo Wikimedia Commons</span>
+                        )}
                     </div>
                 </div>
             </Link>

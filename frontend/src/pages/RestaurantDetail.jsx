@@ -77,9 +77,23 @@ export default function RestaurantDetail() {
                 <div className="detail-layout">
                     <div className="detail-image">
                         {restaurant.image ? (
-                            <img src={restaurant.image} alt={restaurant.name} />
+                            <img
+                                src={restaurant.image}
+                                alt={`Photo de ${restaurant.name}`}
+                                loading="eager"
+                                referrerPolicy="no-referrer"
+                                onError={(event) => {
+                                    event.currentTarget.style.display = 'none';
+                                    event.currentTarget.nextElementSibling?.removeAttribute('hidden');
+                                }}
+                            />
                         ) : (
                             <span className="detail-image-placeholder">FoodSpot</span>
+                        )}
+                        {restaurant.image && (
+                            <span className="detail-image-placeholder" hidden>
+                                {restaurant.name.slice(0, 1).toUpperCase()}
+                            </span>
                         )}
                     </div>
 

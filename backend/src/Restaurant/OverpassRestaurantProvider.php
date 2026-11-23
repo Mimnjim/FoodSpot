@@ -49,7 +49,8 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
                     fn (array $element): array => $this->normalizer->normalize($element, $city),
                     $this->diversifyByCuisine($elements),
                 );
-                return array_slice($results, 0, self::MAX_RESULTS);
+                $results = array_slice($results, 0, self::MAX_RESULTS);
+                return $this->enrichCollectionWithPanoramax($results);
             }
         }
 
@@ -72,7 +73,8 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
                 $this->diversifyByCuisine($elements),
             );
 
-            return array_slice($results, 0, self::MAX_RESULTS);
+            $results = array_slice($results, 0, self::MAX_RESULTS);
+            return $this->enrichCollectionWithPanoramax($results);
         });
     }
 
@@ -95,6 +97,7 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
 
         $nominatimDetail = $this->requestNominatimPlaceDetail($providerId);
         if ($nominatimDetail !== null) {
+            $nominatimDetail = $this->enrichWithPanoramax($nominatimDetail);
             return $nominatimDetail;
         }
 
@@ -211,6 +214,97 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
     }
 
     /** @return array<string, mixed> */
+    private function enrichCollectionWithPanoramax(array $restaurants): array
+    {
+        $coordinates = array_filter(array_map(
+            static fn (array $restaurant): ?array => is_array($restaurant['location'] ?? null)
+                ? $restaurant['location']
+                : null,
+            $restaurants,
+        ));
+        if (count($coordinates) < 2) {
+            return $restaurants;
+        }
+
+        $latitudes = array_column($coordinates, 'latitude');
+        $longitudes = array_column($coordinates, 'longitude');
+        $padding = 0.002;
+        $bbox = implode(',', [
+            min($longitudes) - $padding,
+            min($latitudes) - $padding,
+            max($longitudes) + $padding,
+            max($latitudes) + $padding,
+        ]);
+        $url = 'https://panoramax.ign.fr/api/search?' . http_build_query([
+            'bbox' => $bbox,
+            'limit' => 100,
+        ]);
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => ['User-Agent' => 'FoodSpot/1.0'],
+                'timeout' => 2,
+            ]);
+            $payload = $response->toArray();
+        } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface) {
+            return $restaurants;
+        }
+
+        $features = is_array($payload['features'] ?? null) ? $payload['features'] : [];
+        foreach ($restaurants as &$restaurant) {
+            if ($restaurant['image'] !== null) {
+                continue;
+            }
+            $location = $restaurant['location'] ?? null;
+            if (!is_array($location)) {
+                continue;
+            }
+
+            $nearest = null;
+            $nearestDistance = null;
+            foreach ($features as $feature) {
+                $featureCoordinates = $feature['geometry']['coordinates'] ?? null;
+                if (!is_array($featureCoordinates) || count($featureCoordinates) < 2) {
+                    continue;
+                }
+                $distance = $this->distanceInMeters(
+                    (float) $location['latitude'],
+                    (float) $location['longitude'],
+                    (float) $featureCoordinates[1],
+                    (float) $featureCoordinates[0],
+                );
+                if ($nearestDistance === null || $distance < $nearestDistance) {
+                    $nearestDistance = $distance;
+                    $nearest = $feature;
+                }
+            }
+
+            if ($nearest !== null && $nearestDistance !== null && $nearestDistance <= 200) {
+                $thumb = $nearest['assets']['thumb']['href']
+                    ?? $nearest['assets']['sd']['href']
+                    ?? null;
+                if (is_string($thumb) && filter_var($thumb, FILTER_VALIDATE_URL)) {
+                    $restaurant['image'] = $thumb;
+                    $restaurant['imageSource'] = 'panoramax';
+                }
+            }
+        }
+        unset($restaurant);
+
+        return $restaurants;
+    }
+
+    private function distanceInMeters(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371000;
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lonDelta = deg2rad($lon2 - $lon1);
+        $a = sin($latDelta / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lonDelta / 2) ** 2;
+        return $earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a));
+    }
+
+    /** @return array<string, mixed> */
     private function request(string $query, ?string $city): array
     {
         $lastStatus = null;
@@ -270,6 +364,47 @@ final class OverpassRestaurantProvider implements RestaurantProviderInterface
         }
 
         throw new RuntimeException('Le service OpenStreetMap est momentanément indisponible.');
+    }
+
+    /** @return array<string, mixed> */
+    private function enrichWithPanoramax(array $restaurant): array
+    {
+        if ($restaurant['image'] !== null) {
+            return $restaurant;
+        }
+
+        $location = $restaurant['location'] ?? null;
+        if (!is_array($location) || !isset($location['latitude'], $location['longitude'])) {
+            return $restaurant;
+        }
+
+        $url = 'https://panoramax.ign.fr/api/search?' . http_build_query([
+            'place_position' => $location['longitude'] . ',' . $location['latitude'],
+            'place_distance' => '3-50',
+            'place_fov_tolerance' => 180,
+            'limit' => 1,
+        ]);
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => ['User-Agent' => 'FoodSpot/1.0'],
+                'timeout' => 1,
+            ]);
+            $payload = $response->toArray();
+        } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface) {
+            return $restaurant;
+        }
+
+        $feature = $payload['features'][0] ?? null;
+        $thumb = $feature['assets']['thumb']['href']
+            ?? $feature['assets']['sd']['href']
+            ?? null;
+        if (is_string($thumb) && filter_var($thumb, FILTER_VALIDATE_URL)) {
+            $restaurant['image'] = $thumb;
+            $restaurant['imageSource'] = 'panoramax';
+        }
+
+        return $restaurant;
     }
 
     /** @return array<string, mixed>|null */

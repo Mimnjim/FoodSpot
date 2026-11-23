@@ -38,12 +38,17 @@ final class RestaurantNormalizer
         $image = null;
         if (is_string($directImage) && filter_var($directImage, FILTER_VALIDATE_URL)) {
             $image = $directImage;
+            $imageSource = 'osm';
         } elseif (is_string($commonsImage) && str_starts_with($commonsImage, 'File:')) {
             $filename = substr($commonsImage, 5);
             $image = 'https://commons.wikimedia.org/wiki/Special:Redirect/file/'
                 . rawurlencode(str_replace(' ', '_', $filename));
+            $imageSource = 'wikimedia-commons';
         } elseif (is_string($commonsImage) && str_starts_with($commonsImage, 'Category:')) {
             $image = null;
+            $imageSource = null;
+        } else {
+            $imageSource = null;
         }
         $description = $tags['description'] ?? null;
         if (!is_string($description) || trim($description) === '') {
@@ -67,6 +72,7 @@ final class RestaurantNormalizer
             'openingHours' => $tags['opening_hours'] ?? null,
             'description' => $description,
             'image' => $image,
+            'imageSource' => $imageSource,
         ];
     }
 }
